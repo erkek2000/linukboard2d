@@ -1,0 +1,30 @@
+[gd_scene load_steps=2 format=3 uid="uid://o4pyqbcay2t2"]
+
+[ext_resource type="Script" path="res://scripts/info.gd" id="1_2thcs"]
+
+[node name="Info" type="Node"]
+script = ExtResource("1_2thcs")
+
+[node name="RichTextLabel" type="RichTextLabel" parent="."]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 342.0
+grow_horizontal = 2
+size_flags_vertical = 0
+text = "This is how you play the game:"
+fit_content = true
+
+[node name="BackButton" type="Button" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -22.5
+offset_top = -31.0
+offset_right = 22.5
+grow_horizontal = 2
+grow_vertical = 0
+text = "Back"
+
+[connection signal="pressed" from="BackButton" to="." method="_on_back_button_pressed"]
