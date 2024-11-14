@@ -12,6 +12,6 @@ func _process(delta: float) -> void:
 
 
 # Button Pressed signal form BoardMaker.
-func _on_board_maker_send_location(name) -> void:
+func _on_board_maker_send_location(name, turn) -> void:
 	print(name)
 	pass # Replace with function body.
