@@ -9,12 +9,12 @@ extends FlowContainer
 var turn: String = "Player"
 
 signal send_location
-
+	
 func _ready():
-	# stop negative numbers from happening
-	#if Board_Size_X < 0 or Board_Size_Y < 0:
-	#	return
-		
+	
+	var player_1_icon_raw = preload("res://assets/icon.svg")
+	var player_2_icon_raw = preload("res://assets/icon2.svg")
+	
 	# Set up the board
 	for y in Board_Size_Y:
 		self.size.y += Tile_Size_Y + 5
@@ -25,8 +25,22 @@ func _ready():
 			temp.set_custom_minimum_size(Vector2(Tile_Size_X, Tile_Size_Y))
 			temp.connect("pressed", func():
 				emit_signal("send_location", temp.name, turn))
-		
-			#temp.button_pressed
-			temp.set_name(str(x) + "-" + str(y))
+				
+			#temp.set_button_icon(sprite)
+			#temp.icon = preload("res://assets/icon.png")
+			
+			temp.set_name(str(y) + "-" + str(x))
 			add_child(temp)
+			
+	# Create a new image and texture for each button and player
+	var image = player_1_icon_raw.get_image()
+	image.resize(Tile_Size_X-10, Tile_Size_Y-10, Image.INTERPOLATE_LANCZOS)
+	var player_1_icon = ImageTexture.create_from_image(image)
+	
+	var image2 = player_2_icon_raw.get_image()
+	image2.resize(Tile_Size_X-10, Tile_Size_Y-10, Image.INTERPOLATE_LANCZOS)
+	var player_2_icon = ImageTexture.create_from_image(image2)
+	
+	get_node("7-3").icon = player_1_icon
+	get_node("0-4").icon = player_2_icon
 		
