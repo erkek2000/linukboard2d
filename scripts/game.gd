@@ -36,7 +36,7 @@ func _process(delta: float) -> void:
 
 #region SIGNALS
 # Button Pressed signal form BoardMaker.
-func _on_board_maker_send_location(name, turn) -> void:
+func _on_board_maker_send_location(name, Turn, Turn_Type, x, y) -> void:
 	print(name)
 	pass # Replace with function body.
 #endregion
