@@ -6,7 +6,8 @@ var board: Array = []
 var Turn: String = "Player Turn"
 # Can be Move or Block
 var Turn_Type: String = "Move"
-
+var Player_Pos: Vector2 = Vector2(7, 3)
+var AI_Pos: Vector2 = Vector2(0, 4)
 
 
 func print_board():
