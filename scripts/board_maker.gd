@@ -7,21 +7,12 @@ extends FlowContainer
 @export var Tile_Size_Y: int = 50
 
 
-var Turn: String = "Player Turn"
-
-# Can be Move or Block
-var Turn_Type: String = "Move"
 
 signal send_location
 	
 func _ready():
 	
-	# Determine first turn
-	var first_turn : int = randi() % 2
-	if first_turn == 1:
-		Turn = "Player Turn"
-	elif first_turn == 0:
-		Turn = "AI Turn"
+
 
 	var player_1_icon_raw = preload("res://assets/icon.svg")
 	var player_2_icon_raw = preload("res://assets/icon2.svg")
@@ -35,7 +26,7 @@ func _ready():
 			var temp = Button.new()
 			temp.set_custom_minimum_size(Vector2(Tile_Size_X, Tile_Size_Y))
 			temp.connect("pressed", func():
-				emit_signal("send_location", temp.name, Turn, Turn_Type, x, y))
+				emit_signal("send_location", temp.name, y, x))
 				
 			#temp.set_button_icon(sprite)
 			#temp.icon = preload("res://assets/icon.png")
