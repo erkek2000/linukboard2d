@@ -1,25 +1,39 @@
 extends Control
 
-var board: Array = []
+# The Board
+var Board: Array = []
 
 # Can be Player Turn or AI Turn
 var Turn: String = "Player Turn"
 # Can be Move or Block
 var Turn_Type: String = "Move"
+# Gives Player Position, updated once every turn.
 var Player_Pos: Vector2 = Vector2(7, 3)
+# Gives AI Position, updated once every turn.
 var AI_Pos: Vector2 = Vector2(0, 4)
+# Gives Player Move Position, updated twice every turn.
+var Signal_Pos: Vector2 = Vector2(-1, -1)
 
 
-func print_board():
-	for row in board:
-		print(row)
-
+# Called when node enters the scene. (on load)
 func _ready() -> void:
 	
+	initiate_board()
+	determine_first_turn()
+	run_game()
+	
+	#test_calculate_position()
+	#print_board()
+	
+	#var b = get_node("7-3")
+	#b.set_button_icon()
+
+
+func initiate_board() -> void:
 	# INITIATE BOARD ARRAY
 	#
 	# 0 - Empty Squares
-	# 1 - Player 1
+	# 1 - Player 
 	# 2 - Player AI
 	# -1 - Blocked Squares
 	#
@@ -27,27 +41,44 @@ func _ready() -> void:
 		var new_row = []  # Make an empty new row before filling it.
 		for col in range(8):
 			new_row.append(0) # 0 for empty squares.
-		board.append(new_row)  # Add the row to the board
-	board[7][3] = 1
-	board[0][4] = 2
-	
-	# Determine first turn
+		Board.append(new_row)  # Add the row to the Board
+	Board[7][3] = 1 # Player
+	Board[0][4] = 2 # AI
+
+
+func determine_first_turn() -> void:
 	var first_turn : int = randi() % 2
 	if first_turn == 1:
 		Turn = "Player Turn"
 	elif first_turn == 0:
 		Turn = "AI Turn"
-	
-	#var b = get_node("7-3")
-	print_board()
-	test_check_around_position()
-	#b.set_button_icon()
+
+
+func run_game() -> void:
+	# check Get Move
+	# check_victory()
+	# change_turn()
+	# check Get Block
+	# check_victory()
+	# change_turn()
+	 # DISABLE BUTTONS
+	# AI PLAY
+	# check Get Move
+	# check_victory()
+	# change_turn()
+	# check Get Block
+	# check_victory()
+	# change_turn()
+	pass
+
+
+func ai_play():
+	pass
 	
 # Maybe make this into an update game func
-func determine_turn():
-	
+func change_turn() -> void:
 	if Turn == "Player Turn":
-		if Turn_Type == "Move":
+		if Turn_Type == "Move":	
 			Turn_Type = "Block"
 		else:
 			Turn = "AI Turn"
@@ -58,11 +89,23 @@ func determine_turn():
 			Turn = "Player Turn"
 	
 
-func ai_play():
-	pass
-	
-func calculate_position(boardPosX: int, boardPosY: int, old_board: Array = board):
-	# Make a new board for in depth calculations
+
+func print_board() -> void:
+	for row in Board:
+		print(row)
+
+
+func check_victory() -> int:
+	if calculate_position(Player_Pos.x, Player_Pos.y) <= 0:
+		return 2 # AI Victory
+	elif calculate_position(AI_Pos.x, AI_Pos.y) <= 0:
+		return 1 # Player Victory
+	else:
+		return 0 # Playable
+
+
+func calculate_position(boardPosX: int, boardPosY: int, old_board: Array = Board) -> int:
+	# Make a new Board for in depth calculations
 	var new_board: Array = old_board
 	var point: int = 0
 	if new_board[boardPosX][boardPosY] != 0:
@@ -86,6 +129,7 @@ func calculate_position(boardPosX: int, boardPosY: int, old_board: Array = board
 func index_in_bounds(index: int, size: int) -> bool:
 	return index >= 0 and index < size
 
+
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	pass
@@ -99,9 +143,10 @@ func _on_board_maker_send_location(name, y, x) -> void:
 	pass # Replace with function body.
 #endregion
 
-#region Test Functions
+#region TEST_FUNCTIONS
 
-func test_check_around_position():
+
+func test_calculate_position() -> void:
 	var oldBoard = [
 		[0, 1, 0, 0],
 		[0, 0, 1, 0],

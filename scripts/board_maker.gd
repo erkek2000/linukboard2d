@@ -27,7 +27,7 @@ func _ready():
 			temp.set_custom_minimum_size(Vector2(Tile_Size_X, Tile_Size_Y))
 			temp.connect("pressed", func():
 				emit_signal("send_location", temp.name, y, x))
-				
+			
 			#temp.set_button_icon(sprite)
 			#temp.icon = preload("res://assets/icon.png")
 			
