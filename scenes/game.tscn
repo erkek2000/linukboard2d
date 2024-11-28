@@ -14,4 +14,5 @@ offset_right = 40.0
 offset_bottom = 40.0
 script = ExtResource("1_3fxhg")
 
+[connection signal="board_ready" from="BoardMaker" to="." method="_on_board_maker_board_ready"]
 [connection signal="send_location" from="BoardMaker" to="." method="_on_board_maker_send_location"]

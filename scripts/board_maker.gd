@@ -7,13 +7,11 @@ extends FlowContainer
 @export var Tile_Size_Y: int = 50
 
 
-
+signal board_ready
 signal send_location
 	
 func _ready():
 	
-
-
 	var player_1_icon_raw = preload("res://assets/icon.svg")
 	var player_2_icon_raw = preload("res://assets/icon2.svg")
 	
@@ -32,8 +30,14 @@ func _ready():
 			#temp.icon = preload("res://assets/icon.png")
 			
 			temp.set_name(str(y) + "-" + str(x))
+			temp.disabled = true
 			add_child(temp)
-			
+	
+	self.connect("board_ready", Callable(self, "_on_board_ready"))
+	emit_signal("board_ready")
+
+
+
 	# Create a new image and texture for each button and player
 	var image = player_1_icon_raw.get_image()
 	image.resize(Tile_Size_X-10, Tile_Size_Y-10, Image.INTERPOLATE_LANCZOS)

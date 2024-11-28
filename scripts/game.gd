@@ -13,11 +13,16 @@ var Player_Pos: Vector2 = Vector2(7, 3)
 var AI_Pos: Vector2 = Vector2(0, 4)
 # Gives Player Move Position, updated twice every turn.
 var Signal_Pos: Vector2 = Vector2(-1, -1)
-
+# BoardMaker Node - for accessing buttons
+var Board_Maker : Node
 
 # Called when node enters the scene. (on load)
 func _ready() -> void:
 	
+	# Wait until buttons are ready.
+	while Board_Maker == null:
+		continue
+		
 	initiate_board()
 	determine_first_turn()
 	run_game()
@@ -50,8 +55,11 @@ func determine_first_turn() -> void:
 	var first_turn : int = randi() % 2
 	if first_turn == 1:
 		Turn = "Player Turn"
+		toggle_buttons(Board_Maker, true)
 	elif first_turn == 0:
 		Turn = "AI Turn"
+		toggle_buttons(Board_Maker, false)
+	print ("First Turn is ", Turn)
 
 
 func run_game() -> void:
@@ -75,14 +83,24 @@ func run_game() -> void:
 func ai_play():
 	pass
 	
+
+# Function to toggle the interactivity of buttons
+func toggle_buttons(parent: Node, is_turn: bool):
+	for child in parent.get_children():
+		if child is Button:
+			child.disabled = not is_turn
+
+
 # Maybe make this into an update game func
 func change_turn() -> void:
 	if Turn == "Player Turn":
-		if Turn_Type == "Move":	
+		toggle_buttons(Board_Maker, true)
+		if Turn_Type == "Move":
 			Turn_Type = "Block"
 		else:
 			Turn = "AI Turn"
 	else:
+		toggle_buttons(Board_Maker, false)
 		if Turn_Type == "Move":
 			Turn_Type = "Block"
 		else:
@@ -136,11 +154,18 @@ func _process(delta: float) -> void:
 
 
 #region SIGNALS
+
 # Button Pressed signal form BoardMaker.
 # Probably won't need y,x parameters.
 func _on_board_maker_send_location(name, y, x) -> void:
 	print(name)
-	pass # Replace with function body.
+
+
+func _on_board_maker_board_ready() -> void:
+	Board_Maker = self.get_child(0)
+	print("BoardMaker is ready!")
+
+
 #endregion
 
 #region TEST_FUNCTIONS
