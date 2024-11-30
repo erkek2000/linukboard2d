@@ -27,6 +27,8 @@ func _ready() -> void:
 		
 	initiate_board()
 	determine_first_turn()
+	get_move()
+	#move_icon(Board_Maker.get_node('7-3'), Board_Maker.get_node('7-7'), Vector2(7,7))
 	run_game()
 	
 	#test_calculate_position()
@@ -83,17 +85,53 @@ func run_game() -> void:
 func get_move():
 	toggle_buttons(Board_Maker, true)
 	# Wait until a button is clicked.
+	# THIS LOOP MUST GO.
 	while New_Button_Signal != true:
 		continue
-	#checkmove
+	
 	var new_pos: Vector2 = Signal_Pos
-	# Move player
-	Board[new_pos.y][new_pos.x] = 1
-	# swap button icons
+	# This should be in a loop
+	if check_move(Player_Pos, new_pos):
+		# Move player on Board
+		move_player(new_pos)
+		# Stringify the vectors so they can reach buttons.
+		var player_pos_string = vector2_to_string(Player_Pos)
+		var new_pos_string = vector2_to_string(new_pos)
+		# Move button icons
+		move_icon(Board_Maker.get_node(player_pos_string), Board_Maker.get_node(new_pos_string), new_pos)
 
-func check_move():
+
+func vector2_to_string(vec: Vector2) -> String:
+	return str(vec.x) + "-" + str(vec.y)
+
+
+func move_icon(old_pos :Node, new_pos: Node, on_board_new_pos: Vector2):
+	# Handle Button icons for positions
+	var old_pos_icon = old_pos.get_button_icon()
+	var new_pos_icon = new_pos.get_button_icon()
+	old_pos.set_button_icon(new_pos_icon)
+	new_pos.set_button_icon(old_pos_icon)
+
+
+func move_player(new_pos: Vector2):
+	# Move on Board
+	Board[Player_Pos.x][Player_Pos.y] = 0
+	Board[new_pos.x][new_pos.y] = 1
+	Player_Pos = new_pos
+
+
+func place_block(pos: Node, on_board_pos: Vector2):
+	# Should be similar to move_player.
+	# Set Icon
+	Board[on_board_pos.x][on_board_pos.y] = -1
 	pass
 
+
+func check_move(old_pos: Vector2, new_pos: Vector2) -> bool:
+	var delta_x = abs(new_pos.x - old_pos.x)
+	var delta_y = abs(new_pos.y - old_pos.y)
+	# return if the move is withing 1 square of the old position.
+	return delta_x <= 1 and delta_y <= 1
 
 func ai_play():
 	pass
@@ -121,11 +159,6 @@ func change_turn() -> void:
 		else:
 			Turn = "Player Turn"
 	
-
-
-func print_board() -> void:
-	for row in Board:
-		print(row)
 
 
 func check_victory() -> int:
@@ -187,6 +220,11 @@ func _on_board_maker_board_ready() -> void:
 #endregion
 
 #region TEST_FUNCTIONS
+
+
+func print_board() -> void:
+	for row in Board:
+		print(row)
 
 
 func test_calculate_position() -> void:
