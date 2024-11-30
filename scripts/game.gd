@@ -13,6 +13,8 @@ var Player_Pos: Vector2 = Vector2(7, 3)
 var AI_Pos: Vector2 = Vector2(0, 4)
 # Gives Player Move Position, updated twice every turn.
 var Signal_Pos: Vector2 = Vector2(-1, -1)
+# Variable that changes every time board is clicked.
+var New_Button_Signal: bool = false
 # BoardMaker Node - for accessing buttons
 var Board_Maker : Node
 
@@ -55,10 +57,8 @@ func determine_first_turn() -> void:
 	var first_turn : int = randi() % 2
 	if first_turn == 1:
 		Turn = "Player Turn"
-		toggle_buttons(Board_Maker, true)
 	elif first_turn == 0:
 		Turn = "AI Turn"
-		toggle_buttons(Board_Maker, false)
 	print ("First Turn is ", Turn)
 
 
@@ -80,9 +80,24 @@ func run_game() -> void:
 	pass
 
 
+func get_move():
+	toggle_buttons(Board_Maker, true)
+	# Wait until a button is clicked.
+	while New_Button_Signal != true:
+		continue
+	#checkmove
+	var new_pos: Vector2 = Signal_Pos
+	# Move player
+	Board[new_pos.y][new_pos.x] = 1
+	# swap button icons
+
+func check_move():
+	pass
+
+
 func ai_play():
 	pass
-	
+
 
 # Function to toggle the interactivity of buttons
 func toggle_buttons(parent: Node, is_turn: bool):
@@ -158,7 +173,10 @@ func _process(delta: float) -> void:
 # Button Pressed signal form BoardMaker.
 # Probably won't need y,x parameters.
 func _on_board_maker_send_location(name, y, x) -> void:
+	Signal_Pos = Vector2(y, x)
+	New_Button_Signal = true
 	print(name)
+	print(Signal_Pos)
 
 
 func _on_board_maker_board_ready() -> void:
