@@ -27,7 +27,7 @@ func _ready() -> void:
 		
 	initiate_board()
 	determine_first_turn()
-	get_move()
+	#get_move()
 	#move_icon(Board_Maker.get_node('7-3'), Board_Maker.get_node('7-7'), Vector2(7,7))
 	run_game()
 	
@@ -59,12 +59,15 @@ func determine_first_turn() -> void:
 	var first_turn : int = randi() % 2
 	if first_turn == 1:
 		Turn = "Player Turn"
+		toggle_buttons(Board_Maker, true)
 	elif first_turn == 0:
 		Turn = "AI Turn"
+		toggle_buttons(Board_Maker, false)
 	print ("First Turn is ", Turn)
 
 
 func run_game() -> void:
+	# USE SIGNALS INSTEAD.
 	# check Get Move
 	# check_victory()
 	# change_turn()
@@ -82,23 +85,26 @@ func run_game() -> void:
 	pass
 
 
-func get_move():
-	toggle_buttons(Board_Maker, true)
-	# Wait until a button is clicked.
-	# THIS LOOP MUST GO.
-	while New_Button_Signal != true:
-		continue
-	
-	var new_pos: Vector2 = Signal_Pos
-	# This should be in a loop
-	if check_move(Player_Pos, new_pos):
-		# Move player on Board
-		move_player(new_pos)
-		# Stringify the vectors so they can reach buttons.
-		var player_pos_string = vector2_to_string(Player_Pos)
-		var new_pos_string = vector2_to_string(new_pos)
-		# Move button icons
-		move_icon(Board_Maker.get_node(player_pos_string), Board_Maker.get_node(new_pos_string), new_pos)
+## REMOVE get_move use signal instead.
+#func get_move() -> bool:
+	#toggle_buttons(Board_Maker, true)
+	## Wait until a button is clicked.
+	## THIS LOOP MUST GO.
+	#if New_Button_Signal != true:
+		#return false
+	#
+	#var new_pos: Vector2 = Signal_Pos
+	## This should be in a loop
+	#if check_move(Player_Pos, new_pos):
+		## Move player on Board
+		#move_player(new_pos)
+		## Stringify the vectors so they can reach buttons.
+		#var player_pos_string = vector2_to_string(Player_Pos)
+		#var new_pos_string = vector2_to_string(new_pos)
+		## Move button icons
+		#move_icon(Board_Maker.get_node(player_pos_string), Board_Maker.get_node(new_pos_string), new_pos)
+	#
+	#return true
 
 
 func vector2_to_string(vec: Vector2) -> String:
@@ -131,7 +137,16 @@ func check_move(old_pos: Vector2, new_pos: Vector2) -> bool:
 	var delta_x = abs(new_pos.x - old_pos.x)
 	var delta_y = abs(new_pos.y - old_pos.y)
 	# return if the move is withing 1 square of the old position.
+	print ("checkmove is " , (delta_x <= 1 and delta_y <= 1))
 	return delta_x <= 1 and delta_y <= 1
+
+
+func check_block(pos: Vector2) -> bool:
+	if Board[pos.x][pos.y] == 0:
+		return true
+	else:
+		return false
+
 
 func ai_play():
 	pass
@@ -152,12 +167,14 @@ func change_turn() -> void:
 			Turn_Type = "Block"
 		else:
 			Turn = "AI Turn"
+			toggle_buttons(Board_Maker, false)
 	else:
 		toggle_buttons(Board_Maker, false)
 		if Turn_Type == "Move":
 			Turn_Type = "Block"
 		else:
 			Turn = "Player Turn"
+			toggle_buttons(Board_Maker, true)
 	
 
 
@@ -196,6 +213,18 @@ func index_in_bounds(index: int, size: int) -> bool:
 	return index >= 0 and index < size
 
 
+func victory():
+	toggle_buttons(Board_Maker, false)
+	# Make victory pop up visible
+	pass
+
+
+func defeat():
+	toggle_buttons(Board_Maker, false)
+	# Make defeat pop up visible
+	pass
+
+
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	pass
@@ -207,9 +236,33 @@ func _process(delta: float) -> void:
 # Probably won't need y,x parameters.
 func _on_board_maker_send_location(name, y, x) -> void:
 	Signal_Pos = Vector2(y, x)
-	New_Button_Signal = true
+	#New_Button_Signal = true
 	print(name)
 	print(Signal_Pos)
+	# Stringify the vectors so they can reach buttons.
+	var player_pos_string = vector2_to_string(Player_Pos)
+	var new_pos_string = vector2_to_string(Signal_Pos)
+	if Turn_Type == "Move":
+		if check_move(Player_Pos, Signal_Pos):
+			# Move player on Board
+			move_player(Signal_Pos)
+			# Move button icons
+			move_icon(Board_Maker.get_node(player_pos_string), Board_Maker.get_node(new_pos_string), Signal_Pos)
+			
+			# Check if opponent has any moves after
+			if check_victory() == 1:
+				victory()
+			else:
+				change_turn()
+	else:
+		if check_block(Signal_Pos):
+			place_block(Board_Maker.get_node(new_pos_string), Signal_Pos)
+			
+			# Check if opponent has any moves after
+			if check_victory() == 1:
+				victory()
+			else:
+				change_turn()
 
 
 func _on_board_maker_board_ready() -> void:
