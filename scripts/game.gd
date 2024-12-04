@@ -26,7 +26,7 @@ func _ready() -> void:
 		continue
 		
 	initiate_board()
-	determine_first_turn()
+	
 	#get_move()
 	#move_icon(Board_Maker.get_node('7-3'), Board_Maker.get_node('7-7'), Vector2(7,7))
 	run_game()
@@ -67,6 +67,7 @@ func determine_first_turn() -> void:
 
 
 func run_game() -> void:
+	determine_first_turn()
 	# USE SIGNALS INSTEAD.
 	# check Get Move
 	# check_victory()
@@ -129,11 +130,16 @@ func move_player(new_pos: Vector2):
 func place_block(pos: Node, on_board_pos: Vector2):
 	# Should be similar to move_player.
 	# Set Icon
+	var block_icon = Board_Maker.get_node("block").get_button_icon()
+	pos.set_button_icon(block_icon)
 	Board[on_board_pos.x][on_board_pos.y] = -1
-	pass
 
 
 func check_move(old_pos: Vector2, new_pos: Vector2) -> bool:
+	# Check if empty
+	if Board[new_pos.x][new_pos.y] != 0:
+		return false
+	# Check if within 1 range
 	var delta_x = abs(new_pos.x - old_pos.x)
 	var delta_y = abs(new_pos.y - old_pos.y)
 	# return if the move is withing 1 square of the old position.
@@ -195,7 +201,7 @@ func calculate_position(boardPosX: int, boardPosY: int, old_board: Array = Board
 		# if not a valid position return 0
 		return point
 		
-	# OLD CODE, CHECK IF WORKS
+	# OLD CODE, CHECK TWICE IF WORKS
 	# Check positions around the given coordinates
 	for i in range(boardPosX - 1, boardPosX + 2):
 		for j in range(boardPosY - 1, boardPosY + 2):
