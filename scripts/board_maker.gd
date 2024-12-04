@@ -52,8 +52,8 @@ func _ready():
 	get_node("0-4").icon = player_2_icon
 	
 	
-	# Make an invisible button to store Block Icon's image.
-	# Can be later used to swap and copy icons from there.
+	# Make an invisible button to load and store Block Icon's image.
+	# Can be later used to swap or copy icons from there.
 	var secret_button = Button.new()
 	secret_button.set_name("block")
 	secret_button.visible = false

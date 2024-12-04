@@ -26,9 +26,6 @@ func _ready() -> void:
 		continue
 		
 	initiate_board()
-	
-	#get_move()
-	#move_icon(Board_Maker.get_node('7-3'), Board_Maker.get_node('7-7'), Vector2(7,7))
 	run_game()
 	
 	#test_calculate_position()
@@ -142,12 +139,12 @@ func check_move(old_pos: Vector2, new_pos: Vector2) -> bool:
 	# Check if within 1 range
 	var delta_x = abs(new_pos.x - old_pos.x)
 	var delta_y = abs(new_pos.y - old_pos.y)
-	# return if the move is withing 1 square of the old position.
 	print ("checkmove is " , (delta_x <= 1 and delta_y <= 1))
 	return delta_x <= 1 and delta_y <= 1
 
 
 func check_block(pos: Vector2) -> bool:
+	# Check if position is empty
 	if Board[pos.x][pos.y] == 0:
 		return true
 	else:
@@ -158,8 +155,17 @@ func ai_play():
 	pass
 
 
-# Function to toggle the interactivity of buttons
+func minimax():
+	pass
+
+
+func calculate_minimax_points(max_pos: Vector2, min_pos: Vector2):
+	# returns the difference between self position (max_pos) and player position (min_pos)
+	return calculate_position(max_pos.x, max_pos.y) - calculate_position(min_pos.x, min_pos.y)
+
+
 func toggle_buttons(parent: Node, is_turn: bool):
+	# Toggle each button
 	for child in parent.get_children():
 		if child is Button:
 			child.disabled = not is_turn
