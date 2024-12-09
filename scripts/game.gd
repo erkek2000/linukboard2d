@@ -18,7 +18,8 @@ var New_Button_Signal: bool = false
 # BoardMaker Node - for accessing buttons
 var Board_Maker : Node
 
-# Called when node enters the scene. (on load)
+
+# Default func called when node enters the scene. (on load)
 func _ready() -> void:
 	
 	# Wait until buttons are ready.
@@ -63,6 +64,7 @@ func determine_first_turn() -> void:
 	print ("First Turn is ", Turn)
 
 
+# Useless implementation. Just move it to _ready in the future.
 func run_game() -> void:
 	determine_first_turn()
 	# USE SIGNALS INSTEAD.
@@ -81,28 +83,6 @@ func run_game() -> void:
 	# check_victory()
 	# change_turn()
 	pass
-
-
-## REMOVE get_move use signal instead.
-#func get_move() -> bool:
-	#toggle_buttons(Board_Maker, true)
-	## Wait until a button is clicked.
-	## THIS LOOP MUST GO.
-	#if New_Button_Signal != true:
-		#return false
-	#
-	#var new_pos: Vector2 = Signal_Pos
-	## This should be in a loop
-	#if check_move(Player_Pos, new_pos):
-		## Move player on Board
-		#move_player(new_pos)
-		## Stringify the vectors so they can reach buttons.
-		#var player_pos_string = vector2_to_string(Player_Pos)
-		#var new_pos_string = vector2_to_string(new_pos)
-		## Move button icons
-		#move_icon(Board_Maker.get_node(player_pos_string), Board_Maker.get_node(new_pos_string), new_pos)
-	#
-	#return true
 
 
 func vector2_to_string(vec: Vector2) -> String:
@@ -132,9 +112,12 @@ func place_block(pos: Node, on_board_pos: Vector2):
 	Board[on_board_pos.x][on_board_pos.y] = -1
 
 
-func check_move(old_pos: Vector2, new_pos: Vector2) -> bool:
+func check_move(old_pos: Vector2, new_pos: Vector2, board: Array = Board) -> bool:
+	# Check if inside board
+	if not (index_in_bounds(new_pos.x, 8) and index_in_bounds(new_pos.y, 8)):
+		return false
 	# Check if empty
-	if Board[new_pos.x][new_pos.y] != 0:
+	if board[new_pos.x][new_pos.y] != 0:
 		return false
 	# Check if within 1 range
 	var delta_x = abs(new_pos.x - old_pos.x)
@@ -143,25 +126,132 @@ func check_move(old_pos: Vector2, new_pos: Vector2) -> bool:
 	return delta_x <= 1 and delta_y <= 1
 
 
-func check_block(pos: Vector2) -> bool:
+func check_block(pos: Vector2, board: Array = Board) -> bool:
+	# Check if inside board
+	if not (index_in_bounds(pos.x, 8) and index_in_bounds(pos.y, 8)):
+		return false
 	# Check if position is empty
-	if Board[pos.x][pos.y] == 0:
+	if board[pos.x][pos.y] == 0:
 		return true
 	else:
 		return false
+
+
+func get_all_moves(board: Array, self_pos: Vector2) -> Array:
+	var moves: Array = []
+	var x = self_pos.x
+	var y = self_pos.y
+	
+	# All possible movement directions
+	var directions = [
+		Vector2(-1, 0),
+		Vector2(1, 0),
+		Vector2(0, -1),
+		Vector2(0, 1),
+		Vector2(-1, -1),
+		Vector2(-1, 1),
+		Vector2(1, -1),
+		Vector2(1, 1)
+	]
+	
+	for direction in directions:
+		var new_pos = Vector2(x + direction.x, y + direction.y)
+		if check_move(self_pos, new_pos):
+			moves.append(new_pos)
+
+	return moves
+
+
+# DOES NOT get all blocks. Only blocks near opponent.
+# AI should always put their blocks near player.
+# This logic may change.
+func get_all_blocks(board: Array, opponent_pos: Vector2) -> Array:
+	var blocks: Array = []
+	var x = opponent_pos.x
+	var y = opponent_pos.y
+	
+	# All possible block directions
+	var directions = [
+		Vector2(-1, 0),
+		Vector2(1, 0),
+		Vector2(0, -1),
+		Vector2(0, 1),
+		Vector2(-1, -1),
+		Vector2(-1, 1),
+		Vector2(1, -1),
+		Vector2(1, 1)
+	]
+	
+	for direction in directions:
+		var pos = Vector2(x + direction.x, y + direction.y)
+		if check_block(pos):
+			blocks.append(pos)
+	return blocks
+
+
+func minimax(max_pos: Vector2, min_pos: Vector2, board: Array, depth: int, alpha: int, beta: int, maximizingPlayer: bool) -> int:
+	# initial call minimax(currentPosition, 3, -∞, +∞, true)
+	if depth == 0 or check_victory() != 0:
+		return calculate_minimax_points(max_pos, min_pos)
+	
+	if maximizingPlayer:
+		var maxEval = -INF
+		#for each child of position
+			#eval = minimax(child, depth - 1, alpha, beta false)
+			#maxEval = max(maxEval, eval)
+			#alpha = max(alpha, eval)
+			#if beta <= alpha
+				#break
+		#return maxEval
+	else:
+		var minEval = INF
+		#minEval = +infinity
+		#for each child of position
+			#eval = minimax(child, depth - 1, alpha, beta true)
+			#minEval = min(minEval, eval)
+			#beta = min(beta, eval)
+			#if beta <= alpha
+				#break
+		#return minEval
+	# IMPLEMENT
+	return 0
+
+
+#func minimax(position: Array, depth: int, alpha: int, beta: int, maximizingPlayer: bool) -> int:
+	#if depth == 0 or check_victory() != 0:
+		#return static_evaluation(position)
+#
+	#if maximizingPlayer:
+		#var maxEval = -INF
+		#for child in get_children_of_position(position):  # Implement this to get child positions
+			#var eval = minimax(child, depth - 1, alpha, beta, false)
+			#maxEval = max(maxEval, eval)
+			#alpha = max(alpha, eval)
+			#if beta <= alpha:
+				#break  # Beta cut-off
+		#return maxEval
+	#else:
+		#var minEval = INF
+		#for child in get_children_of_position(position):  # Implement this to get child positions
+			#var eval = minimax(child, depth - 1, alpha, beta, true)
+			#minEval = min(minEval, eval)
+			#beta = min(beta, eval)
+			#if beta <= alpha:
+				#break  # Alpha cut-off
+		#return minEval
+#
+## Initial call example
+#func ai_play():
+	#var best_score = minimax(currentPosition, 3, -INF, INF, true)
 
 
 func ai_play():
 	pass
 
 
-func minimax():
-	pass
-
-
-func calculate_minimax_points(max_pos: Vector2, min_pos: Vector2):
+func calculate_minimax_points(max_pos: Vector2, min_pos: Vector2, board: Array = Board) -> int:
 	# returns the difference between self position (max_pos) and player position (min_pos)
-	return calculate_position(max_pos.x, max_pos.y) - calculate_position(min_pos.x, min_pos.y)
+	return calculate_position(max_pos.x, max_pos.y, board) - calculate_position(min_pos.x, min_pos.y, board)
 
 
 func toggle_buttons(parent: Node, is_turn: bool):
@@ -187,25 +277,15 @@ func change_turn() -> void:
 		else:
 			Turn = "Player Turn"
 			toggle_buttons(Board_Maker, true)
-	
-
-
-func check_victory() -> int:
-	if calculate_position(Player_Pos.x, Player_Pos.y) <= 0:
-		return 2 # AI Victory
-	elif calculate_position(AI_Pos.x, AI_Pos.y) <= 0:
-		return 1 # Player Victory
-	else:
-		return 0 # Playable
 
 
 func calculate_position(boardPosX: int, boardPosY: int, old_board: Array = Board) -> int:
 	# Make a new Board for in depth calculations
 	var new_board: Array = old_board
-	var point: int = 0
+	var points: int = 0
 	if new_board[boardPosX][boardPosY] != 0:
 		# if not a valid position return 0
-		return point
+		return points
 		
 	# OLD CODE, CHECK TWICE IF WORKS
 	# Check positions around the given coordinates
@@ -213,16 +293,24 @@ func calculate_position(boardPosX: int, boardPosY: int, old_board: Array = Board
 		for j in range(boardPosY - 1, boardPosY + 2):
 			if index_in_bounds(i, 8) and index_in_bounds(j, 8):
 				if new_board[i][j] == 0:
-					point += 1
-		# No need for try/except in GDScript for index checking
-		# If index is out of bounds, it will simply not enter the if statement
+					points += 1
 
 	# Point-1 because it counts the position we are checking too.
-	return point - 1
+	return points - 1
 
 # Helper function to check if an index is within bounds
 func index_in_bounds(index: int, size: int) -> bool:
 	return index >= 0 and index < size
+
+
+# This func may just call Victory func and return nothing at all.
+func check_victory() -> int:
+	if calculate_position(Player_Pos.x, Player_Pos.y) <= 0:
+		return 2 # AI Victory
+	elif calculate_position(AI_Pos.x, AI_Pos.y) <= 0:
+		return 1 # Player Victory
+	else:
+		return 0 # Playable
 
 
 func victory():
@@ -237,6 +325,7 @@ func defeat():
 	pass
 
 
+# Default func
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	pass
