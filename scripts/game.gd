@@ -2,10 +2,15 @@ extends Control
 
 # The Board
 var Board: Array = []
-
-# Can be Player Turn or AI Turn
+#
+# 0 - Empty Squares
+# 1 - Player 
+# 2 - AI
+# -1 - Blocked Squares
+#
+# Can be "Player Turn" or "AI Turn"
 var Turn: String = "Player Turn"
-# Can be Move or Block
+# Can be "Move" or "Block"
 var Turn_Type: String = "Move"
 # Gives Player Position, updated once every turn.
 var Player_Pos: Vector2 = Vector2(7, 3)
@@ -136,8 +141,8 @@ func check_block(pos: Vector2, board: Array = Board) -> bool:
 	else:
 		return false
 
-
-func get_all_moves(board: Array, self_pos: Vector2) -> Array:
+# returns board arrays with moves on them.
+func get_all_moves(board: Array, self_pos: Vector2, Turn: int) -> Array:
 	var moves: Array = []
 	var x = self_pos.x
 	var y = self_pos.y
@@ -153,18 +158,25 @@ func get_all_moves(board: Array, self_pos: Vector2) -> Array:
 		Vector2(1, -1),
 		Vector2(1, 1)
 	]
-	
+
 	for direction in directions:
 		var new_pos = Vector2(x + direction.x, y + direction.y)
 		if check_move(self_pos, new_pos):
+			# Create a new board and set the block position to -1
+			var new_board: Array = []
+			for row in board:
+				# Duplicate the current board state
+				# This might be HEAVY on the performance.
+				new_board.append(row.duplicate())
+
+			new_board[new_pos.x][new_pos.y] = Turn
 			moves.append(new_pos)
-
 	return moves
-
 
 # DOES NOT get all blocks. Only blocks near opponent.
 # AI should always put their blocks near player.
 # This logic may change.
+# Returns board arrays with blocks on them.
 func get_all_blocks(board: Array, opponent_pos: Vector2) -> Array:
 	var blocks: Array = []
 	var x = opponent_pos.x
@@ -185,71 +197,70 @@ func get_all_blocks(board: Array, opponent_pos: Vector2) -> Array:
 	for direction in directions:
 		var pos = Vector2(x + direction.x, y + direction.y)
 		if check_block(pos):
-			blocks.append(pos)
+			# Create a new board and set the block position to -1
+			var new_board: Array = []
+			for row in board:
+				# Duplicate the current board state
+				# This might be HEAVY on the performance.
+				new_board.append(row.duplicate())
+
+			new_board[pos.x][pos.y] = -1
+			blocks.append(new_board)
+
 	return blocks
 
 
 func minimax(max_pos: Vector2, min_pos: Vector2, board: Array, depth: int, alpha: int, beta: int, maximizingPlayer: bool) -> int:
 	# initial call minimax(currentPosition, 3, -∞, +∞, true)
 	if depth == 0 or check_victory() != 0:
-		return calculate_minimax_points(max_pos, min_pos)
-	
+		return calculate_minimax_points(max_pos, min_pos, board)
 	if maximizingPlayer:
-		var maxEval = -INF
-		#for each child of position
-			#eval = minimax(child, depth - 1, alpha, beta false)
-			#maxEval = max(maxEval, eval)
-			#alpha = max(alpha, eval)
-			#if beta <= alpha
-				#break
-		#return maxEval
+		var maxEval = -INF  # Initialize max evaluation to negative infinity
+		var boards_bank: Array = [] # Move and block turns combined boards array.
+		var move_boards: Array = get_all_moves(board, max_pos, 2) # All "Move" moves.
+		# Add "Block" moves to "Move" moves - completing a full turn.
+		for move_board in move_boards:
+			var block_boards = get_all_blocks(move_board, min_pos)
+			# Append each block board to the boards_bank
+			for block_board in block_boards:
+				boards_bank.append(block_board)  # Store each resulting board structure
+
+		# Iterate through each possible child position from the current board state
+		for a_board in boards_bank:
+			# Recursively call minimax for the next depth with minimizing player
+			var eval = minimax(max_pos, min_pos, a_board, depth - 1, alpha, beta, false)
+			maxEval = max(maxEval, eval)  # Update max evaluation if a better score is found
+			alpha = max(alpha, eval)  # Update alpha to the maximum value found so far
+			if beta <= alpha:  # If beta is less than or equal to alpha, prune the search tree
+				break  # Exit the loop as further exploration is unnecessary
+		return maxEval  # Return the best evaluation found for maximizing player
+
 	else:
-		var minEval = INF
-		#minEval = +infinity
-		#for each child of position
-			#eval = minimax(child, depth - 1, alpha, beta true)
-			#minEval = min(minEval, eval)
-			#beta = min(beta, eval)
-			#if beta <= alpha
-				#break
-		#return minEval
-	# IMPLEMENT
-	return 0
-
-
-#func minimax(position: Array, depth: int, alpha: int, beta: int, maximizingPlayer: bool) -> int:
-	#if depth == 0 or check_victory() != 0:
-		#return static_evaluation(position)
-#
-	#if maximizingPlayer:
-		#var maxEval = -INF
-		#for child in get_children_of_position(position):  # Implement this to get child positions
-			#var eval = minimax(child, depth - 1, alpha, beta, false)
-			#maxEval = max(maxEval, eval)
-			#alpha = max(alpha, eval)
-			#if beta <= alpha:
-				#break  # Beta cut-off
-		#return maxEval
-	#else:
-		#var minEval = INF
-		#for child in get_children_of_position(position):  # Implement this to get child positions
-			#var eval = minimax(child, depth - 1, alpha, beta, true)
-			#minEval = min(minEval, eval)
-			#beta = min(beta, eval)
-			#if beta <= alpha:
-				#break  # Alpha cut-off
-		#return minEval
-#
-## Initial call example
-#func ai_play():
-	#var best_score = minimax(currentPosition, 3, -INF, INF, true)
+		var minEval = INF  # Initialize min evaluation to positive infinity
+		var boards_bank: Array = [] # Move and block turns combined boards array.
+		var move_boards: Array = get_all_moves(board, min_pos, 1) # All "Move" moves.
+		# Add "Block" moves to "Move" moves - completing a full turn.
+		for move_board in move_boards:
+			var block_boards = get_all_blocks(move_board, max_pos)
+			# Append each block board to the boards_bank
+			for block_board in block_boards:
+				boards_bank.append(block_board)  # Store each resulting board structure
+		# Iterate through each possible child position from the current board state
+		for a_board in boards_bank:
+			# Recursively call minimax for the next depth with maximizing player
+			var eval = minimax(max_pos, min_pos, a_board, depth - 1, alpha, beta, true)
+			minEval = min(minEval, eval)  # Update min evaluation if a better (lower) score is found
+			beta = min(beta, eval)  # Update beta to the minimum value found so far
+			if beta <= alpha:  # If beta is less than or equal to alpha, prune the search tree
+				break  # Exit the loop as further exploration is unnecessary
+		return minEval  # Return the best evaluation found for minimizing player
 
 
 func ai_play():
 	pass
 
 
-func calculate_minimax_points(max_pos: Vector2, min_pos: Vector2, board: Array = Board) -> int:
+func calculate_minimax_points(max_pos: Vector2, min_pos: Vector2, board: Array) -> int:
 	# returns the difference between self position (max_pos) and player position (min_pos)
 	return calculate_position(max_pos.x, max_pos.y, board) - calculate_position(min_pos.x, min_pos.y, board)
 
