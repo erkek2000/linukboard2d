@@ -209,7 +209,9 @@ func get_all_blocks(board: Array, opponent_pos: Vector2) -> Array:
 
 	return blocks
 
-
+# SHOULD ALSO GIVE THE BEST MOVE.
+# Test this.
+# GIGANTIC recursive function. Check performance issues.
 func minimax(max_pos: Vector2, min_pos: Vector2, board: Array, depth: int, alpha: int, beta: int, maximizingPlayer: bool) -> int:
 	# initial call minimax(currentPosition, 3, -∞, +∞, true)
 	if depth == 0 or check_victory() != 0:
@@ -262,6 +264,7 @@ func ai_play():
 
 func calculate_minimax_points(max_pos: Vector2, min_pos: Vector2, board: Array) -> int:
 	# returns the difference between self position (max_pos) and player position (min_pos)
+	# Calculated by the amount of free blocks around each player.
 	return calculate_position(max_pos.x, max_pos.y, board) - calculate_position(min_pos.x, min_pos.y, board)
 
 
