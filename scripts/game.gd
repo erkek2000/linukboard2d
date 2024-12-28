@@ -1,5 +1,6 @@
 extends Control
 
+@export var MINIMAX_DEPTH: int = 3
 # The Board
 var Board: Array = []
 #
@@ -23,8 +24,8 @@ var New_Button_Signal: bool = false
 # BoardMaker Node - for accessing buttons
 var Board_Maker : Node
 # Best current moves for the AI.
-var best_move: Vector2 = Vector2(-1, -1)
-var best_block: Vector2 = Vector2(-1, -1)
+#var Best_Move: Vector2 = Vector2(-1, -1)
+#var Best_Block: Vector2 = Vector2(-1, -1)
 var Turn_Number: int = 1
 
 # Default func called when node enters the scene. (on load)
@@ -56,7 +57,7 @@ func initiate_board() -> void:
 		var new_row = []  # Make an empty new row before filling it.
 		for col in range(8):
 			new_row.append(0) # 0 for empty squares.
-		Board.append(new_row)  # Add the row to the Board
+		Board.append(new_row.duplicate(true))  # Add the row to the Board
 	Board[7][3] = 1 # Player
 	Board[0][4] = 2 # AI
 
@@ -134,7 +135,7 @@ func place_block(pos: Node, on_board_pos: Vector2):
 	Board[on_board_pos.x][on_board_pos.y] = -1
 
 
-func check_move(old_pos: Vector2, new_pos: Vector2, board: Array = Board) -> bool:
+func check_move(old_pos: Vector2, new_pos: Vector2, board: Array) -> bool:
 	# Check if inside board
 	if not (index_in_bounds(new_pos.x, 8) and index_in_bounds(new_pos.y, 8)):
 		return false
@@ -148,8 +149,9 @@ func check_move(old_pos: Vector2, new_pos: Vector2, board: Array = Board) -> boo
 	return delta_x <= 1 and delta_y <= 1
 
 
-func check_block(pos: Vector2, board: Array = Board) -> bool:
+func check_block(pos: Vector2, board: Array) -> bool:
 	# Check if inside board
+	
 	if not (index_in_bounds(pos.x, 8) and index_in_bounds(pos.y, 8)):
 		return false
 	# Check if position is empty
@@ -159,7 +161,7 @@ func check_block(pos: Vector2, board: Array = Board) -> bool:
 		return false
 
 # returns board arrays with moves on them.
-func get_all_moves(board: Array, self_pos: Vector2, turn: int) -> Array:
+func get_all_moves(board: Array, self_pos: Vector2, player: int) -> Array:
 	var moves: Array = []
 	var x = self_pos.x
 	var y = self_pos.y
@@ -178,16 +180,18 @@ func get_all_moves(board: Array, self_pos: Vector2, turn: int) -> Array:
 
 	for direction in directions:
 		var new_pos = Vector2(x + direction.x, y + direction.y)
-		if check_move(self_pos, new_pos):
+		if check_move(self_pos, new_pos, board):
 			# Create a new board and set the block position to -1
 			var new_board: Array = []
 			for row in board:
 				# Duplicate the current board state
 				# This might be HEAVY on the performance.
-				new_board.append(row.duplicate())
-
-			new_board[new_pos.x][new_pos.y] = turn
-			moves.append(new_board)
+				new_board.append(row.duplicate(true))
+			
+			new_board[x][y] = 0
+			new_board[new_pos.x][new_pos.y] = player
+			var new_board_copy: Array = new_board.duplicate(true)
+			moves.append(new_board_copy)
 	return moves
 
 # DOES NOT get all blocks. Only blocks near opponent.
@@ -213,16 +217,17 @@ func get_all_blocks(board: Array, opponent_pos: Vector2) -> Array:
 	
 	for direction in directions:
 		var pos = Vector2(x + direction.x, y + direction.y)
-		if check_block(pos):
+		if check_block(pos, board):
 			# Create a new board and set the block position to -1
 			var new_board: Array = []
 			for row in board:
 				# Duplicate the current board state
 				# This might be HEAVY on the performance.
-				new_board.append(row.duplicate())
+				new_board.append(row.duplicate(true))
 
 			new_board[pos.x][pos.y] = -1
-			blocks.append(new_board)
+			var new_board_copy: Array = new_board.duplicate(true)
+			blocks.append(new_board_copy)
 
 	return blocks
 
@@ -230,7 +235,7 @@ func get_all_blocks(board: Array, opponent_pos: Vector2) -> Array:
 # might be [y][x] test it.
 func compare_boards(current_board: Array, new_board: Array) -> Dictionary:
 	var changes: Dictionary = {"move": Vector2(-1, -1), "block": Vector2(-1, -1)}
-	
+	 # Check if boards are valid
 	for x in range(8):
 		for y in range(8):
 			if current_board[x][y] != new_board[x][y]:
@@ -244,7 +249,7 @@ func compare_boards(current_board: Array, new_board: Array) -> Dictionary:
 	
 	return changes
 
-
+'''
 # SHOULD ALSO GIVE THE BEST MOVE.
 # Test this.
 # GIGANTIC recursive function. Check performance issues.
@@ -265,7 +270,7 @@ func minimax(max_pos: Vector2, min_pos: Vector2, board: Array, depth: int, alpha
 			var block_boards = get_all_blocks(move_board, min_pos)
 			for block_board in block_boards:
 				var eval = minimax(max_pos, min_pos, block_board, depth - 1, alpha, beta, false)
-				#print ("eval: ", eval)
+				print ("considered eval for maximizer: ", eval)
 				if eval > maxEval:
 					
 					maxEval = eval
@@ -281,8 +286,10 @@ func minimax(max_pos: Vector2, min_pos: Vector2, board: Array, depth: int, alpha
 					break
 		# Update global best moves if a better evaluation was found
 		if current_best_move != Vector2(-1, -1):
-			best_move = current_best_move
-			best_block = current_best_block
+			Best_Move = current_best_move
+			Best_Block = current_best_block
+			print ("Best move is ", Best_Move)
+			print ("Best block is ", Best_Block)
 		#print("Exited minimax depth: ", depth)
 		return maxEval  # Return the best evaluation found for maximizing player
 	else:
@@ -294,6 +301,7 @@ func minimax(max_pos: Vector2, min_pos: Vector2, board: Array, depth: int, alpha
 			var block_boards = get_all_blocks(move_board, max_pos)
 			for block_board in block_boards:
 				var eval = minimax(max_pos, min_pos, block_board, depth - 1, alpha, beta, true)
+				print ("considered eval for minimizer: ", eval)
 				#print ("eval: ", eval)
 				if eval < minEval:
 					minEval = eval
@@ -306,17 +314,78 @@ func minimax(max_pos: Vector2, min_pos: Vector2, board: Array, depth: int, alpha
 					break
 		# Update global best moves if a better evaluation was found
 		if current_best_move != Vector2(-1, -1):
-			best_move = current_best_move
-			best_block = current_best_block
+			Best_Move = current_best_move
+			Best_Block = current_best_block
+			print ("Best move is ", Best_Move)
+			print ("Best block is ", Best_Block)
 		#print("Exited minimax depth: ", depth)
 		return minEval  # Return the best evaluation found for minimizing player
+'''
 
+# WORKS FAULTY.
+# player is 1 for Player, 2 for AI.
+func generate_moves(board: Array, self_pos: Vector2, opponent_pos: Vector2, player: int) -> Array:
+	var full_move_boards = []
+	var move_boards = get_all_moves(board, self_pos, player)
+	
+	for move_board in move_boards:
+		var move_board_copy: Array = move_board.duplicate(true)
+		var block_boards = get_all_blocks(move_board_copy, opponent_pos)
+		
+		for block_board in block_boards:
+			var block_board_copy: Array = block_board.duplicate(true)
+			print("block board is:")
+			print_board(block_board_copy)
+			full_move_boards.append(block_board_copy)
+		print("NEXT MOVE BOARD")
+			
+	return full_move_boards
+
+# SHOULD ALSO GIVE THE BEST MOVE.
+# Test this.
+# GIGANTIC recursive function. Check performance issues.
+func minimax(max_pos: Vector2, min_pos: Vector2, board: Array, depth: int, alpha: int, beta: int, maximizingPlayer: bool) -> int:
+	# initial call minimax(currentPosition, 3, -INF, +INF, true)
+	if depth == 0 or check_victory(board) != 0:
+		var a: int = calculate_minimax_points(max_pos, min_pos, board)
+		#print("Reached base case at depth: ", depth)
+		#print("Reached base case with eval: ", a)
+		return a
+	if maximizingPlayer:
+		var moves: Array = generate_moves(board, max_pos, min_pos, 2)
+		var maxEval: int = -INF 
+		
+		for move in moves:
+			var move_copy: Array = move.duplicate(true)
+			var eval: int = minimax(max_pos, min_pos, move_copy, depth - 1, alpha, beta, false)
+			if eval > maxEval:
+				maxEval = eval
+			alpha = max(alpha, eval)
+			if beta <= alpha:
+				break
+		return maxEval
+	else:
+		var moves: Array = generate_moves(board, min_pos, max_pos, 1)
+		var minEval: int = INF
+		
+		for move in moves:
+			var move_copy: Array = move.duplicate(true)
+			var eval: int = minimax(max_pos, min_pos, move_copy, depth - 1, alpha, beta, true)
+			if eval < minEval:
+				minEval = eval
+			beta = min(beta, eval)
+			if beta <= alpha:
+				break
+		return minEval
 
 
 func calculate_minimax_points(max_pos: Vector2, min_pos: Vector2, board: Array) -> int:
 	# returns the difference between self position (max_pos) and player position (min_pos)
 	# Calculated by the amount of free blocks around each player.
-	return calculate_position(max_pos.x, max_pos.y, board) - calculate_position(min_pos.x, min_pos.y, board)
+	var self_mobility: int = calculate_position(max_pos.x, max_pos.y, board)
+	var opponent_mobility: int = calculate_position(min_pos.x, min_pos.y, board)
+	var points: int = self_mobility - opponent_mobility
+	return points
 
 
 func toggle_buttons(parent: Node, is_turn: bool):
@@ -354,6 +423,7 @@ func change_turn() -> void:
 func calculate_position(boardPosX: int, boardPosY: int, board: Array) -> int:
 	var points: int = 0
 	# Check if the given position is valid
+	# Maybe add mobility value too.
 	if not index_in_bounds(boardPosX, 8) or not index_in_bounds(boardPosY, 8):
 		return 0
 	
@@ -379,9 +449,10 @@ func index_in_bounds(index: int, size: int) -> bool:
 
 
 # This func may just call Victory func and return nothing at all.
-func check_victory() -> int:
-	var player_victory: int = calculate_position(Player_Pos.x, Player_Pos.y, Board)
-	var AI_victory: int = calculate_position(AI_Pos.x, AI_Pos.y, Board)
+func check_victory(board) -> int:
+	var board_copy: Array = board.duplicate(true)
+	var player_victory: int = calculate_position(Player_Pos.x, Player_Pos.y, board_copy)
+	var AI_victory: int = calculate_position(AI_Pos.x, AI_Pos.y, board_copy)
 	if player_victory <= 0:
 		print ("DEFEAT ", player_victory)
 		return 2 # AI Victory
@@ -410,28 +481,79 @@ func _process(delta: float) -> void:
 	pass
 
 
+
 func ai_play():
-	var eval = minimax(AI_Pos, Player_Pos, Board, 5, -INF, +INF, true)
+	var best_score: int = -INF
+	var best_board: Array = []
+	var best_move: Vector2
+	var best_block: Vector2
+	
+	var moves_bank = generate_moves(Board, AI_Pos, Player_Pos, 2)
+	
+	for move_board in moves_bank:
+		#print("current move board:" )
+		#print_board(move_board)
+		var score = minimax(AI_Pos, Player_Pos, move_board, MINIMAX_DEPTH, -INF, INF, true)
+		if score >= best_score:
+			best_board = []
+			best_score = score
+			for row in move_board:
+				best_board.append(row.duplicate(true))
+
+			
+	# APPLY BEST MOVE
+	var changes = compare_boards(Board, best_board)
+	best_move = changes["move"]
+	best_block = changes["block"]
 	
 	var ai_pos_string :String = vector2_to_string(AI_Pos)
-	var new_pos_string :String= vector2_to_string(best_move)
-	var new_block_string :String = vector2_to_string(best_block)
+	var best_move_string :String= vector2_to_string(best_move)
+	var best_block_string :String = vector2_to_string(best_block)
+	move_AI(best_move)
+	move_icon(Board_Maker.get_node(ai_pos_string), Board_Maker.get_node(best_move_string))
+	
+	
+	if check_victory(Board) == 2:
+		defeat()
+
+	place_block(Board_Maker.get_node(best_block_string), best_block)
+
+	# Check if opponent has any moves after
+	if check_victory(Board) == 2:
+		defeat()
+	else:
+		change_turn()
+
+
+'''
+func ai_play():
+	var eval = minimax(AI_Pos, Player_Pos, Board, 3, -INF, +INF, true)
+	
+	var ai_pos_string :String = vector2_to_string(AI_Pos)
+	var best_move_string :String= vector2_to_string(Best_Move)
+	var best_block_string :String = vector2_to_string(Best_Block)
 	# Move button icons
 	print ("Turn Number: ", Turn_Number)
 	print ("eval is ", eval)
 	print ("ai_pos_string:", ai_pos_string)
-	print ("new_pos_string:", new_pos_string)
-	print ("new_block_string:", new_block_string)
-	move_icon(Board_Maker.get_node(ai_pos_string), Board_Maker.get_node(new_pos_string))
-	move_AI(best_move)
-	place_block(Board_Maker.get_node(new_block_string), best_block)
-
+	print ("Final Best Move is:", best_move_string)
+	print ("Final Best Block is:", best_block_string)
+	
+	
+	move_icon(Board_Maker.get_node(ai_pos_string), Board_Maker.get_node(best_move_string))
+	move_AI(Best_Move)
+	
+	if check_victory() == 2:
+		defeat()
+	
+	place_block(Board_Maker.get_node(best_block_string), Best_Block)
+	
 	# Check if opponent has any moves after
 	if check_victory() == 2:
 		defeat()
 	else:
 		change_turn()
-
+'''
 
 #region SIGNALS
 
@@ -446,24 +568,24 @@ func _on_board_maker_send_location(name, y, x) -> void:
 	var player_pos_string = vector2_to_string(Player_Pos)
 	var new_pos_string = vector2_to_string(Signal_Pos)
 	if Turn_Type == "Move":
-		if check_move(Player_Pos, Signal_Pos):
-			# Move button icons
-			move_icon(Board_Maker.get_node(player_pos_string), Board_Maker.get_node(new_pos_string), Signal_Pos)
+		if check_move(Player_Pos, Signal_Pos, Board):
+			
 			# Move player on Board
 			move_player(Signal_Pos)
-			
+			# Move button icons
+			move_icon(Board_Maker.get_node(player_pos_string), Board_Maker.get_node(new_pos_string), Signal_Pos)
 			
 			# Check if opponent has any moves after
-			if check_victory() == 1:
+			if check_victory(Board) == 1:
 				victory()
 			else:
 				change_turn()
 	else:
-		if check_block(Signal_Pos):
+		if check_block(Signal_Pos, Board):
 			place_block(Board_Maker.get_node(new_pos_string), Signal_Pos)
 			
 			# Check if opponent has any moves after
-			if check_victory() == 1:
+			if check_victory(Board) == 1:
 				victory()
 			else:
 				change_turn()
@@ -479,8 +601,8 @@ func _on_board_maker_board_ready() -> void:
 #region TEST_FUNCTIONS
 
 
-func print_board() -> void:
-	for row in Board:
+func print_board(board: Array = Board) -> void:
+	for row in board:
 		print(row)
 
 
@@ -546,12 +668,12 @@ func test_calculate_position2():
 
 func test_calculate_position3():
 	var test_board = [
+		[0, -1, 0, 0, 0, 0, 0, 0],
+		[-1, 1, 0, -1, 0, 2, 0, 0],
 		[0, 0, 0, 0, 0, 0, 0, 0],
-		[0, 1, 0, -1, 0, 2, 0, 0],
-		[0, 0, 0, 0, 0, 0, 0, 0],
-		[0, -1, 0, 1, 2, 0, -1, 0],
-		[0, 0, 0, 2, 1, 0, 0, 0],
-		[0, 2, 0, 0, 0, 0, 0, 0],
+		[0, -1, 1, 1, 2, 0, -1, 0],
+		[0, 0, 1, 2, 1, 0, 0, 0],
+		[0, 2, 1, 1, 1, 0, 0, 0],
 		[0, 0, 0, -1, 0, 1, 0, 0],
 		[0, 0, 0, 0, 0, 0, 0, 0]
 	]
@@ -578,6 +700,6 @@ func test_calculate_position3():
 	print("Test Case 7 - On player (3,3): Expected: 3, Got:", calculate_position(3, 3, test_board))
 
 	# Test case 8: Position on AI (2) (3,4)
-	print("Test Case 8 - On AI (3,4): Expected: 4, Got:", calculate_position(3, 4, test_board))
+	print("Test Case 8 - On AI (3,4): Expected: 4, Got:", calculate_position(4, 3, test_board))
 
 #endregion

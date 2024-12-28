@@ -15,6 +15,10 @@ run/main_scene="res://scenes/menu.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 config/icon="res://assets/icon.svg"
 
+[debug]
+
+settings/profiler/max_functions=65535
+
 [display]
 
 window/size/viewport_width=854
