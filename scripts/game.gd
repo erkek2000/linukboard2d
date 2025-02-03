@@ -235,16 +235,19 @@ func get_all_blocks(board: Array, opponent_pos: Vector2) -> Array:
 # might be [y][x] test it.
 func compare_boards(current_board: Array, new_board: Array) -> Dictionary:
 	var changes: Dictionary = {"move": Vector2(-1, -1), "block": Vector2(-1, -1)}
+	# Deep copy boards.
+	var current_board_copy = current_board.duplicate(true)
+	var new_board_copy = new_board.duplicate(true)
 	 # Check if boards are valid
 	for x in range(8):
 		for y in range(8):
-			if current_board[x][y] != new_board[x][y]:
+			if current_board_copy[x][y] != new_board_copy[x][y]:
 				# Check if the position was empty and is now occupied
-				if current_board[x][y] == 0 and new_board[x][y] != 0:
+				if current_board_copy[x][y] == 0 and new_board_copy[x][y] != 0:
 					# Determine if it's a move or block based on the value
-					if new_board[x][y] == 2:  # Assuming 2 is AI's move
+					if new_board_copy[x][y] == 2:  # Assuming 2 is AI's move
 						changes["move"] = Vector2(x, y)
-					elif new_board[x][y] == -1:  # Assuming -1 is Block
+					elif new_board_copy[x][y] == -1:  # Assuming -1 is Block
 						changes["block"] = Vector2(x, y)
 	
 	return changes
@@ -382,8 +385,9 @@ func minimax(max_pos: Vector2, min_pos: Vector2, board: Array, depth: int, alpha
 func calculate_minimax_points(max_pos: Vector2, min_pos: Vector2, board: Array) -> int:
 	# returns the difference between self position (max_pos) and player position (min_pos)
 	# Calculated by the amount of free blocks around each player.
-	var self_mobility: int = calculate_position(max_pos.x, max_pos.y, board)
-	var opponent_mobility: int = calculate_position(min_pos.x, min_pos.y, board)
+	var board_copy = board.duplicate(true)
+	var self_mobility: int = calculate_position(max_pos.x, max_pos.y, board_copy)
+	var opponent_mobility: int = calculate_position(min_pos.x, min_pos.y, board_copy)
 	var points: int = self_mobility - opponent_mobility
 	return points
 
@@ -421,6 +425,7 @@ func change_turn() -> void:
 
 
 func calculate_position(boardPosX: int, boardPosY: int, board: Array) -> int:
+	var board_copy = board.duplicate(true)
 	var points: int = 0
 	# Check if the given position is valid
 	# Maybe add mobility value too.
@@ -438,7 +443,7 @@ func calculate_position(boardPosX: int, boardPosY: int, board: Array) -> int:
 			var y = boardPosY + j
 			
 			# Check if the position is within bounds and empty
-			if index_in_bounds(x, 8) and index_in_bounds(y, 8) and board[x][y] == 0:
+			if index_in_bounds(x, 8) and index_in_bounds(y, 8) and board_copy[x][y] == 0:
 				points += 1
 	
 	return points
