@@ -45,6 +45,12 @@ func _ready() -> void:
 	#b.set_button_icon()
 
 
+# Default func
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta: float) -> void:
+	pass
+
+
 func initiate_board() -> void:
 	# INITIATE BOARD ARRAY
 	#
@@ -182,12 +188,13 @@ func get_all_moves(board: Array, self_pos: Vector2, player: int) -> Array:
 		var new_pos = Vector2(x + direction.x, y + direction.y)
 		if check_move(self_pos, new_pos, board):
 			# Create a new board and set the block position to -1
+			# Duplicate the current board state
+			# This might be HEAVY on the performance.
 			var new_board: Array = []
 			for row in board:
-				# Duplicate the current board state
-				# This might be HEAVY on the performance.
 				new_board.append(row.duplicate(true))
 			
+			#maybe y-x ?
 			new_board[x][y] = 0
 			new_board[new_pos.x][new_pos.y] = player
 			var new_board_copy: Array = new_board.duplicate(true)
@@ -252,78 +259,6 @@ func compare_boards(current_board: Array, new_board: Array) -> Dictionary:
 	
 	return changes
 
-'''
-# SHOULD ALSO GIVE THE BEST MOVE.
-# Test this.
-# GIGANTIC recursive function. Check performance issues.
-func minimax(max_pos: Vector2, min_pos: Vector2, board: Array, depth: int, alpha: int, beta: int, maximizingPlayer: bool) -> int:
-	# initial call minimax(currentPosition, 3, -INF, +INF, true)
-	#print("Entered minimax depth: ", depth)
-	if depth == 0 or check_victory() == 1 or check_victory() == 2:
-		var a = calculate_minimax_points(max_pos, min_pos, board)
-		#print("minimax points: ", a)
-		#print("Exited minimax depth: ", depth)
-		return a
-	if maximizingPlayer:
-		var maxEval = -INF  # Initialize max evaluation to negative infinity
-		var current_best_move: Vector2 = Vector2(-1, -1)  # Local variable for the best move
-		var current_best_block: Vector2 = Vector2(-1, -1)  # Local variable for the best block
-		var move_boards: Array = get_all_moves(board, max_pos, 2)  # All "Move" moves.
-		for move_board in move_boards:
-			var block_boards = get_all_blocks(move_board, min_pos)
-			for block_board in block_boards:
-				var eval = minimax(max_pos, min_pos, block_board, depth - 1, alpha, beta, false)
-				print ("considered eval for maximizer: ", eval)
-				if eval > maxEval:
-					
-					maxEval = eval
-					#print("maxEval: ", maxEval)
-					var changes = compare_boards(board, block_board)  # Compare current board with new block board
-					
-					current_best_move = changes["move"]
-					current_best_block = changes["block"]
-					#print ("current_best_move: ", current_best_move)
-					#print ("current_best_block: ", current_best_block)
-				alpha = max(alpha, eval)
-				if beta <= alpha:
-					break
-		# Update global best moves if a better evaluation was found
-		if current_best_move != Vector2(-1, -1):
-			Best_Move = current_best_move
-			Best_Block = current_best_block
-			print ("Best move is ", Best_Move)
-			print ("Best block is ", Best_Block)
-		#print("Exited minimax depth: ", depth)
-		return maxEval  # Return the best evaluation found for maximizing player
-	else:
-		var minEval = INF  # Initialize min evaluation to positive infinity
-		var current_best_move: Vector2 = Vector2(-1, -1)  # Local variable for the best move
-		var current_best_block: Vector2 = Vector2(-1, -1)  # Local variable for the best block
-		var move_boards: Array = get_all_moves(board, min_pos, 1)  # All "Move" moves.
-		for move_board in move_boards:
-			var block_boards = get_all_blocks(move_board, max_pos)
-			for block_board in block_boards:
-				var eval = minimax(max_pos, min_pos, block_board, depth - 1, alpha, beta, true)
-				print ("considered eval for minimizer: ", eval)
-				#print ("eval: ", eval)
-				if eval < minEval:
-					minEval = eval
-					#print("minEval: ", minEval)
-					var changes = compare_boards(board, block_board)  # Compare current board with new block board
-					#current_best_move = changes["move"]
-					#current_best_block = changes["block"]
-				beta = min(beta, eval)
-				if beta <= alpha:
-					break
-		# Update global best moves if a better evaluation was found
-		if current_best_move != Vector2(-1, -1):
-			Best_Move = current_best_move
-			Best_Block = current_best_block
-			print ("Best move is ", Best_Move)
-			print ("Best block is ", Best_Block)
-		#print("Exited minimax depth: ", depth)
-		return minEval  # Return the best evaluation found for minimizing player
-'''
 
 # WORKS FAULTY.
 # player is 1 for Player, 2 for AI.
@@ -340,15 +275,84 @@ func generate_moves(board: Array, self_pos: Vector2, opponent_pos: Vector2, play
 			print("block board is:")
 			print_board(block_board_copy)
 			full_move_boards.append(block_board_copy)
+		# PROBLEM OCCURS HERE.
 		print("NEXT MOVE BOARD")
 			
 	return full_move_boards
 
+func generate_moves2(board: Array, self_pos: Vector2, opponent_pos: Vector2) -> Array:
+	var moves: Array = []
+	var x = self_pos.x
+	var y = self_pos.y
+	var player = board[x][y]
+
+	var ox = opponent_pos.x
+	var oy = opponent_pos.y
+	var opponent = board[ox][oy]
+
+	if not (player == 1 or player == 2):
+		push_error("Invalid self_pos in generate_moves")
+	elif not (opponent == 1 or opponent == 2):
+		push_error("Invalid opponent_pos in generate_moves")
+	elif player == opponent:
+		push_error("Player and opponent are the same in generate_moves")
+
+	# All possible movement directions
+	var directions = [
+		Vector2(-1, -1), Vector2(0, -1), Vector2(1, -1), Vector2(1, 0),
+		Vector2(1, 1), Vector2(0, 1), Vector2(-1, 1), Vector2(-1, 0)
+	]
+
+	# Iterate through moves and block placements
+	for direction in directions:
+		var new_pos = Vector2(x + direction.x, y + direction.y)
+
+		if check_move(self_pos, new_pos, board):
+			var moved_board: Array = [] # Create a new board
+			for row in board: # Duplicate current board state
+				moved_board.append(row.duplicate(true))
+
+			moved_board[x][y] = 0
+			moved_board[new_pos.x][new_pos.y] = player
+
+			var final_board = place_blocks_expanding(moved_board, opponent_pos)
+
+			var final_board_copy = final_board.duplicate(true)
+			moves.append(final_board_copy)
+	return moves
+
+func place_blocks_expanding(board: Array, opponent_pos: Vector2) -> Array:
+	var blocks_placed: int = 0
+	var new_board: Array = [] # Duplicate the current state
+	for row in board:
+		new_board.append(row.duplicate(true))
+
+	# Increase radius from 1 till it finds 2 valid positions
+	var radius: int = 1
+	while blocks_placed < 2 and radius <= 8:
+		for x in range(-radius, radius + 1):
+			for y in range(-radius, radius + 1):
+				var block_pos = Vector2(opponent_pos.x + x, opponent_pos.y + y)
+				# Check if position is within bounds and not the opponent
+				if index_in_bounds(block_pos.x, 8) and index_in_bounds(block_pos.y, 8) and (block_pos.x != opponent_pos.x or block_pos.y != opponent_pos.y): 
+					if check_block(block_pos, new_board): # If it's empty
+						new_board[block_pos.x][block_pos.y] = -1 # Place block
+						blocks_placed += 1
+						if blocks_placed == 2: # Stop once 2 blocks are placed
+							break
+			if blocks_placed == 2:
+				break
+		if blocks_placed < 2: # If not enough blocks were placed, increase radius
+			radius += 1
+	return new_board
+
+	
 # SHOULD ALSO GIVE THE BEST MOVE.
 # Test this.
 # GIGANTIC recursive function. Check performance issues.
 func minimax(max_pos: Vector2, min_pos: Vector2, board: Array, depth: int, alpha: int, beta: int, maximizingPlayer: bool) -> int:
 	# initial call minimax(currentPosition, 3, -INF, +INF, true)
+	# initial call minimax(AI_Pos, Player_Pos, move_board, MINIMAX_DEPTH, -INF, INF, true)
 	if depth == 0 or check_victory(board) != 0:
 		var a: int = calculate_minimax_points(max_pos, min_pos, board)
 		#print("Reached base case at depth: ", depth)
@@ -480,13 +484,6 @@ func defeat():
 	pass
 
 
-# Default func
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
-
-
-
 func ai_play():
 	var best_score: int = -INF
 	var best_board: Array = []
@@ -498,7 +495,7 @@ func ai_play():
 	for move_board in moves_bank:
 		#print("current move board:" )
 		#print_board(move_board)
-		var score = minimax(AI_Pos, Player_Pos, move_board, MINIMAX_DEPTH, -INF, INF, true)
+		var score = minimax(AI_Pos, Player_Pos, move_board, MINIMAX_DEPTH, -INF, INF, false)
 		if score >= best_score:
 			best_board = []
 			best_score = score

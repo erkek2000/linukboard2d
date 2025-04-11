@@ -24,6 +24,10 @@ settings/profiler/max_functions=65535
 window/size/viewport_width=854
 window/size/viewport_height=480
 
+[network]
+
+limits/debugger/max_chars_per_second=10000000
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
