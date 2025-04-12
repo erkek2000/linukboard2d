@@ -259,7 +259,7 @@ func compare_boards(current_board: Array, new_board: Array) -> Dictionary:
 	
 	return changes
 
-
+'''
 # WORKS FAULTY.
 # player is 1 for Player, 2 for AI.
 func generate_moves(board: Array, self_pos: Vector2, opponent_pos: Vector2, player: int) -> Array:
@@ -279,8 +279,9 @@ func generate_moves(board: Array, self_pos: Vector2, opponent_pos: Vector2, play
 		print("NEXT MOVE BOARD")
 			
 	return full_move_boards
+'''
 
-func generate_moves2(board: Array, self_pos: Vector2, opponent_pos: Vector2) -> Array:
+func generate_moves(board: Array, self_pos: Vector2, opponent_pos: Vector2) -> Array:
 	var moves: Array = []
 	var x = self_pos.x
 	var y = self_pos.y
@@ -346,7 +347,7 @@ func place_blocks_expanding(board: Array, opponent_pos: Vector2) -> Array:
 			radius += 1
 	return new_board
 
-	
+
 # SHOULD ALSO GIVE THE BEST MOVE.
 # Test this.
 # GIGANTIC recursive function. Check performance issues.
@@ -359,7 +360,7 @@ func minimax(max_pos: Vector2, min_pos: Vector2, board: Array, depth: int, alpha
 		#print("Reached base case with eval: ", a)
 		return a
 	if maximizingPlayer:
-		var moves: Array = generate_moves(board, max_pos, min_pos, 2)
+		var moves: Array = generate_moves(board, max_pos, min_pos)
 		var maxEval: int = -INF 
 		
 		for move in moves:
@@ -372,7 +373,7 @@ func minimax(max_pos: Vector2, min_pos: Vector2, board: Array, depth: int, alpha
 				break
 		return maxEval
 	else:
-		var moves: Array = generate_moves(board, min_pos, max_pos, 1)
+		var moves: Array = generate_moves(board, min_pos, max_pos)
 		var minEval: int = INF
 		
 		for move in moves:
@@ -384,6 +385,50 @@ func minimax(max_pos: Vector2, min_pos: Vector2, board: Array, depth: int, alpha
 			if beta <= alpha:
 				break
 		return minEval
+
+
+# Modified minimax function
+func minimax2(board, ai_pos, player_pos, depth, alpha, beta, maximizingPlayer):
+	if depth == 0 or check_victory(board) != 0:
+		var eval = calculate_minimax_points(ai_pos, player_pos, board)
+		return { "eval": eval, "move": null, "block":null }  # No move at leaf nodes
+
+	var best_move = null
+	var best_block = null
+	if maximizingPlayer:
+		var maxEval = -INF
+
+		var moves = get_all_moves(board, ai_pos, 2) # get all moves
+		for move_data in moves:
+			var evalResult = minimax(move_data["board"], move_data["ai_pos"], player_pos, depth - 1, alpha, beta, false)
+			if evalResult.eval > maxEval:
+				maxEval = evalResult.eval
+				best_move = move_data["move"]
+				best_block = move_data["block"]
+
+			alpha = max(alpha, evalResult.eval) #Here
+			if beta <= alpha:
+				break # pruning
+
+		return { "eval": maxEval, "move": best_move, "block": best_block }
+
+	else:  # Minimizing player... same logic as maximizing...
+		var minEval = INF
+
+		var moves = get_all_moves(board, player_pos, 1) # get all moves
+		for move_data in moves:
+			var evalResult = minimax(move_data["board"], ai_pos, player_pos, depth - 1, alpha, beta, true)
+			if evalResult.eval < minEval:
+				minEval = evalResult.eval
+				best_move = move_data["move"]
+				best_block = move_data["block"]
+
+			beta = min(beta, evalResult.eval) #Here
+			if beta <= alpha:
+				break # pruning
+
+		return { "eval": minEval, "move": best_move, "block": best_block }
+
 
 
 func calculate_minimax_points(max_pos: Vector2, min_pos: Vector2, board: Array) -> int:
@@ -490,7 +535,7 @@ func ai_play():
 	var best_move: Vector2
 	var best_block: Vector2
 	
-	var moves_bank = generate_moves(Board, AI_Pos, Player_Pos, 2)
+	var moves_bank = generate_moves(Board, AI_Pos, Player_Pos)
 	
 	for move_board in moves_bank:
 		#print("current move board:" )
