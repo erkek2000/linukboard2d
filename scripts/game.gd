@@ -315,7 +315,15 @@ func generate_moves(board: Array, self_pos: Vector2, opponent_pos: Vector2) -> A
 
 			moved_board[x][y] = 0
 			moved_board[new_pos.x][new_pos.y] = player
-
+			#var move_data = {
+				#"board": moved_board.duplicate(true),  #Ensures it's a copy
+				#"move": new_pos,  #The new positions of the block.
+				#"block1": Vector2(-1, -1),
+				#"block2": Vector2(-1, -1)
+			#}
+			#
+			#var blocks_data = place_blocks_expanding(move_data, opponent_pos) # Puts in current board
+			#moves.append(blocks_data)
 			var final_board = place_blocks_expanding(moved_board, opponent_pos)
 
 			var final_board_copy = final_board.duplicate(true)
@@ -334,13 +342,12 @@ func place_blocks_expanding(board: Array, opponent_pos: Vector2) -> Array:
 		for x in range(-radius, radius + 1):
 			for y in range(-radius, radius + 1):
 				var block_pos = Vector2(opponent_pos.x + x, opponent_pos.y + y)
-				# Check if position is within bounds and not the opponent
-				if index_in_bounds(block_pos.x, 8) and index_in_bounds(block_pos.y, 8) and (block_pos.x != opponent_pos.x or block_pos.y != opponent_pos.y): 
-					if check_block(block_pos, new_board): # If it's empty
-						new_board[block_pos.x][block_pos.y] = -1 # Place block
-						blocks_placed += 1
-						if blocks_placed == 2: # Stop once 2 blocks are placed
-							break
+				# Check if position is within bounds and empty
+				if check_block(block_pos, new_board):
+					new_board[block_pos.x][block_pos.y] = -1 # Place block
+					blocks_placed += 1
+					if blocks_placed == 2: # Stop once 2 blocks are placed
+						break
 			if blocks_placed == 2:
 				break
 		if blocks_placed < 2: # If not enough blocks were placed, increase radius
@@ -388,7 +395,7 @@ func minimax(max_pos: Vector2, min_pos: Vector2, board: Array, depth: int, alpha
 
 
 # Modified minimax function
-func minimax2(board, ai_pos, player_pos, depth, alpha, beta, maximizingPlayer):
+func minimax2(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alpha: int, beta: int, maximizingPlayer: bool):
 	if depth == 0 or check_victory(board) != 0:
 		var eval = calculate_minimax_points(ai_pos, player_pos, board)
 		return { "eval": eval, "move": null, "block":null }  # No move at leaf nodes
@@ -400,7 +407,7 @@ func minimax2(board, ai_pos, player_pos, depth, alpha, beta, maximizingPlayer):
 
 		var moves = get_all_moves(board, ai_pos, 2) # get all moves
 		for move_data in moves:
-			var evalResult = minimax(move_data["board"], move_data["ai_pos"], player_pos, depth - 1, alpha, beta, false)
+			var evalResult = minimax2(move_data["board"], move_data["ai_pos"], player_pos, depth - 1, alpha, beta, false)
 			if evalResult.eval > maxEval:
 				maxEval = evalResult.eval
 				best_move = move_data["move"]
@@ -417,7 +424,7 @@ func minimax2(board, ai_pos, player_pos, depth, alpha, beta, maximizingPlayer):
 
 		var moves = get_all_moves(board, player_pos, 1) # get all moves
 		for move_data in moves:
-			var evalResult = minimax(move_data["board"], ai_pos, player_pos, depth - 1, alpha, beta, true)
+			var evalResult = minimax2(move_data["board"], ai_pos, player_pos, depth - 1, alpha, beta, true)
 			if evalResult.eval < minEval:
 				minEval = evalResult.eval
 				best_move = move_data["move"]
