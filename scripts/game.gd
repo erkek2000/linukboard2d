@@ -1,6 +1,7 @@
 extends Control
 
 @export var MINIMAX_DEPTH: int = 3
+var Debug: bool = false
 # The Board
 var Board: Array = []
 #
@@ -11,7 +12,7 @@ var Board: Array = []
 #
 # Can be "Player Turn" or "AI Turn"
 var Turn: String = "Player Turn"
-# Can be "Move" or "Block"
+# Can be "Move" or "Block1" or "Block2"
 var Turn_Type: String = "Move"
 # Gives Player Position, updated once every turn.
 var Player_Pos: Vector2 = Vector2(7, 3)
@@ -172,240 +173,6 @@ func check_block(pos: Vector2, board: Array) -> bool:
 		return false
 
 
-'''
-# returns board arrays with moves on them.
-func get_all_moves(board: Array, self_pos: Vector2, player: int) -> Array:
-	var moves: Array = []
-	var x = self_pos.x
-	var y = self_pos.y
-	
-	# All possible movement directions
-	var directions = [
-		Vector2(-1, 0),
-		Vector2(1, 0),
-		Vector2(0, -1),
-		Vector2(0, 1),
-		Vector2(-1, -1),
-		Vector2(-1, 1),
-		Vector2(1, -1),
-		Vector2(1, 1)
-	]
-
-	for direction in directions:
-		var new_pos = Vector2(x + direction.x, y + direction.y)
-		if check_move(self_pos, new_pos, board):
-			# Create a new board and set the block position to -1
-			# Duplicate the current board state
-			# This might be HEAVY on the performance.
-			var new_board: Array = []
-			for row in board:
-				new_board.append(row.duplicate(true))
-			
-			#maybe y-x ?
-			new_board[x][y] = 0
-			new_board[new_pos.x][new_pos.y] = player
-			var new_board_copy: Array = new_board.duplicate(true)
-			moves.append(new_board_copy)
-	return moves
-
-# DOES NOT get all blocks. Only blocks near opponent.
-# AI should always put their blocks near player.
-# This logic may change.
-# Returns board arrays with blocks on them.
-func get_all_blocks(board: Array, opponent_pos: Vector2) -> Array:
-	var blocks: Array = []
-	var x = opponent_pos.x
-	var y = opponent_pos.y
-	
-	# All possible block directions
-	var directions = [
-		Vector2(-1, 0),
-		Vector2(1, 0),
-		Vector2(0, -1),
-		Vector2(0, 1),
-		Vector2(-1, -1),
-		Vector2(-1, 1),
-		Vector2(1, -1),
-		Vector2(1, 1)
-	]
-	
-	for direction in directions:
-		var pos = Vector2(x + direction.x, y + direction.y)
-		if check_block(pos, board):
-			# Create a new board and set the block position to -1
-			var new_board: Array = []
-			for row in board:
-				# Duplicate the current board state
-				# This might be HEAVY on the performance.
-				new_board.append(row.duplicate(true))
-
-			new_board[pos.x][pos.y] = -1
-			var new_board_copy: Array = new_board.duplicate(true)
-			blocks.append(new_board_copy)
-
-	return blocks
-
-
-# might be [y][x] test it.
-func compare_boards(current_board: Array, new_board: Array) -> Dictionary:
-	var changes: Dictionary = {"move": Vector2(-1, -1), "block": Vector2(-1, -1)}
-	# Deep copy boards.
-	var current_board_copy = current_board.duplicate(true)
-	var new_board_copy = new_board.duplicate(true)
-	 # Check if boards are valid
-	for x in range(8):
-		for y in range(8):
-			if current_board_copy[x][y] != new_board_copy[x][y]:
-				# Check if the position was empty and is now occupied
-				if current_board_copy[x][y] == 0 and new_board_copy[x][y] != 0:
-					# Determine if it's a move or block based on the value
-					if new_board_copy[x][y] == 2:  # Assuming 2 is AI's move
-						changes["move"] = Vector2(x, y)
-					elif new_board_copy[x][y] == -1:  # Assuming -1 is Block
-						changes["block"] = Vector2(x, y)
-	
-	return changes
-
-
-# WORKS FAULTY.
-# player is 1 for Player, 2 for AI.
-func generate_moves(board: Array, self_pos: Vector2, opponent_pos: Vector2, player: int) -> Array:
-	var full_move_boards = []
-	var move_boards = get_all_moves(board, self_pos, player)
-	
-	for move_board in move_boards:
-		var move_board_copy: Array = move_board.duplicate(true)
-		var block_boards = get_all_blocks(move_board_copy, opponent_pos)
-		
-		for block_board in block_boards:
-			var block_board_copy: Array = block_board.duplicate(true)
-			print("block board is:")
-			print_board(block_board_copy)
-			full_move_boards.append(block_board_copy)
-		# PROBLEM OCCURS HERE.
-		print("NEXT MOVE BOARD")
-			
-	return full_move_boards
-
-
-func generate_moves(board: Array, self_pos: Vector2, opponent_pos: Vector2) -> Array:
-	var moves: Array = []
-	var x = self_pos.x
-	var y = self_pos.y
-	var player = board[x][y]
-
-	var ox = opponent_pos.x
-	var oy = opponent_pos.y
-	var opponent = board[ox][oy]
-
-	if not (player == 1 or player == 2):
-		push_error("Invalid self_pos in generate_moves")
-	elif not (opponent == 1 or opponent == 2):
-		push_error("Invalid opponent_pos in generate_moves")
-	elif player == opponent:
-		push_error("Player and opponent are the same in generate_moves")
-
-	# All possible movement directions
-	var directions = [
-		Vector2(-1, -1), Vector2(0, -1), Vector2(1, -1), Vector2(1, 0),
-		Vector2(1, 1), Vector2(0, 1), Vector2(-1, 1), Vector2(-1, 0)
-	]
-
-	# Iterate through moves and block placements
-	for direction in directions:
-		var new_pos = Vector2(x + direction.x, y + direction.y)
-
-		if check_move(self_pos, new_pos, board):
-			var moved_board: Array = [] # Create a new board
-			for row in board: # Duplicate current board state
-				moved_board.append(row.duplicate(true))
-
-			moved_board[x][y] = 0
-			moved_board[new_pos.x][new_pos.y] = player
-			
-			var move_data = {
-				"board": moved_board.duplicate(true),  # Ensures it's a copy
-				"move": new_pos,  # The new position for the move
-				"block1": Vector2(-1, -1),
-				"block2": Vector2(-1, -1)
-			}
-			
-			var blocks_data = place_blocks_expanding(move_data, opponent_pos) # Puts in current board
-			moves.append(blocks_data)
-			
-			
-			var final_board = place_blocks_expanding(moved_board, opponent_pos)
-
-			var final_board_copy = final_board.duplicate(true)
-			moves.append(final_board_copy)
-	return moves
-
-func place_blocks_expanding(board: Array, opponent_pos: Vector2) -> Array:
-	var blocks_placed: int = 0
-	var new_board: Array = [] # Duplicate the current state
-	for row in board:
-		new_board.append(row.duplicate(true))
-
-	# Increase radius from 1 till it finds 2 valid positions
-	var radius: int = 1
-	while blocks_placed < 2 and radius <= 8:
-		for x in range(-radius, radius + 1):
-			for y in range(-radius, radius + 1):
-				var block_pos = Vector2(opponent_pos.x + x, opponent_pos.y + y)
-				# Check if position is within bounds and empty
-				if check_block(block_pos, new_board):
-					new_board[block_pos.x][block_pos.y] = -1 # Place block
-					blocks_placed += 1
-					if blocks_placed == 2: # Stop once 2 blocks are placed
-						break
-			if blocks_placed == 2:
-				break
-		if blocks_placed < 2: # If not enough blocks were placed, increase radius
-			radius += 1
-	return new_board
-
-
-
-# SHOULD ALSO GIVE THE BEST MOVE.
-# Test this.
-# GIGANTIC recursive function. Check performance issues.
-func minimax(max_pos: Vector2, min_pos: Vector2, board: Array, depth: int, alpha: int, beta: int, maximizingPlayer: bool) -> int:
-	# initial call minimax(currentPosition, 3, -INF, +INF, true)
-	# initial call minimax(AI_Pos, Player_Pos, move_board, MINIMAX_DEPTH, -INF, INF, true)
-	if depth == 0 or check_victory(board) != 0:
-		var a: int = calculate_minimax_points(max_pos, min_pos, board)
-		#print("Reached base case at depth: ", depth)
-		#print("Reached base case with eval: ", a)
-		return a
-	if maximizingPlayer:
-		var moves: Array = generate_moves(board, max_pos, min_pos)
-		var maxEval: int = -INF 
-		
-		for move in moves:
-			var move_copy: Array = move.duplicate(true)
-			var eval: int = minimax(max_pos, min_pos, move_copy, depth - 1, alpha, beta, false)
-			if eval > maxEval:
-				maxEval = eval
-			alpha = max(alpha, eval)
-			if beta <= alpha:
-				break
-		return maxEval
-	else:
-		var moves: Array = generate_moves(board, min_pos, max_pos)
-		var minEval: int = INF
-		
-		for move in moves:
-			var move_copy: Array = move.duplicate(true)
-			var eval: int = minimax(max_pos, min_pos, move_copy, depth - 1, alpha, beta, true)
-			if eval < minEval:
-				minEval = eval
-			beta = min(beta, eval)
-			if beta <= alpha:
-				break
-		return minEval
-'''
-
-
 # Returns a list of move_data dictionaries, each containing:
 # - "board": the board state after the move and blocks
 # - "move": the position the player moved to
@@ -443,6 +210,10 @@ func generate_moves(board: Array, self_pos: Vector2, opponent_pos: Vector2) -> A
 				"board": moved_board,
 				"move": new_pos
 			})
+			
+	if Debug:
+		print("Found ", possible_moves.size(), " valid full ", player, " moves for the board:")
+		print_board(board)
 	
 	# Step 2: For each move, generate all possible block placements
 	for move_data in possible_moves:
@@ -495,7 +266,9 @@ func generate_moves(board: Array, self_pos: Vector2, opponent_pos: Vector2) -> A
 				blocked_board[block1.x][block1.y] = -1
 				blocked_board[block2.x][block2.y] = -1
 				
+				
 				# Add this play to our list
+				
 				all_plays.append({
 					"board": blocked_board,
 					"move": move_pos,
@@ -530,7 +303,12 @@ func get_block_positions_around(board: Array, opponent_pos: Vector2) -> Array:
 # Modified minimax function to work with the new generate_moves
 func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alpha: int, beta: int, maximizingPlayer: bool) -> Dictionary:
 	# Terminal conditions: depth reached or victory detected
-	if depth == 0 or check_victory(board) != 0:
+	if depth == 0 or check_victory(ai_pos, player_pos, board) != 0:
+		if Debug:
+			print("Depth 0 reached with board:")
+			print("############")
+			print_board(board)
+			print("############")
 		return {
 			"eval": calculate_minimax_points(ai_pos, player_pos, board),
 			"move": Vector2(-1, -1),
@@ -569,9 +347,9 @@ func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alp
 				best_block2 = move_data["block2"]
 			
 			# Alpha-Beta pruning
-			alpha = max(alpha, evalResult["eval"])
-			if beta <= alpha:
-				break
+			#alpha = max(alpha, evalResult["eval"])
+			#if beta <= alpha:
+				#break
 		
 		return {
 			"eval": maxEval,
@@ -611,9 +389,9 @@ func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alp
 				best_block2 = move_data["block2"]
 			
 			# Alpha-Beta pruning
-			beta = min(beta, evalResult["eval"])
-			if beta <= alpha:
-				break
+			#beta = min(beta, evalResult["eval"])
+			#if beta <= alpha:
+				#break
 		
 		return {
 			"eval": minEval,
@@ -623,13 +401,19 @@ func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alp
 		}
 
 
-func calculate_minimax_points(max_pos: Vector2, min_pos: Vector2, board: Array) -> int:
+func calculate_minimax_points(ai_pos: Vector2, player_pos: Vector2, board: Array) -> int:
 	# returns the difference between self position (max_pos) and player position (min_pos)
 	# Calculated by the amount of free blocks around each player.
+	if check_victory(ai_pos, player_pos, board) == 1:
+		return -INF
+	elif check_victory(ai_pos, player_pos, board) == 2:
+		return INF
+	
 	var board_copy = board.duplicate(true)
-	var self_mobility: int = calculate_position(max_pos.x, max_pos.y, board_copy)
-	var opponent_mobility: int = calculate_position(min_pos.x, min_pos.y, board_copy)
+	var self_mobility: int = calculate_position(ai_pos.x, ai_pos.y, board_copy)
+	var opponent_mobility: int = calculate_position(player_pos.x, player_pos.y, board_copy)
 	var points: int = self_mobility - opponent_mobility
+	
 	return points
 
 
@@ -645,7 +429,9 @@ func change_turn() -> void:
 	if Turn == "Player Turn":
 		toggle_buttons(Board_Maker, true)
 		if Turn_Type == "Move":
-			Turn_Type = "Block"
+			Turn_Type = "Block1"
+		elif Turn_Type == "Block1":
+			Turn_Type = "Block2"
 		else:
 			Turn_Number += 1
 			Turn = "AI Turn"
@@ -695,15 +481,20 @@ func index_in_bounds(index: int, size: int) -> bool:
 
 
 # This func may just call Victory func and return nothing at all.
-func check_victory(board) -> int:
+func check_victory(player_pos: Vector2, ai_pos: Vector2, board: Array) -> int:
 	var board_copy: Array = board.duplicate(true)
-	var player_victory: int = calculate_position(Player_Pos.x, Player_Pos.y, board_copy)
-	var AI_victory: int = calculate_position(AI_Pos.x, AI_Pos.y, board_copy)
+	var player_victory: int = calculate_position(player_pos.x, player_pos.y, board_copy)
+	var ai_victory: int = calculate_position(ai_pos.x, ai_pos.y, board_copy)
+	
 	if player_victory <= 0:
-		print ("DEFEAT ", player_victory)
+		print("eval for player: ", player_victory)
+		print("eval for AI: ", ai_victory)
+		print ("DEFEAT")
 		return 2 # AI Victory
-	elif AI_victory <= 0:
-		print ("VICTORY ", AI_victory)
+	elif ai_victory <= 0:
+		print("eval for player: ", player_victory)
+		print("eval for AI: ", ai_victory)
+		print ("VICTORY")
 		return 1 # Player Victory
 	else:
 		return 0 # Playable
@@ -723,7 +514,7 @@ func defeat():
 func ai_play():
 	# Get best move using minimax
 	var result = minimax(Board, AI_Pos, Player_Pos, MINIMAX_DEPTH, -INF, INF, true)
-	
+
 	var best_move = result["move"]
 	var best_block1 = result["block1"]
 	var best_block2 = result["block2"]
@@ -737,7 +528,7 @@ func ai_play():
 	move_AI(best_move)
 	
 	# Check for victory after move
-	if check_victory(Board) == 2:
+	if check_victory(AI_Pos, Player_Pos, Board) == 2:
 		defeat()
 		return
 	
@@ -752,84 +543,14 @@ func ai_play():
 		place_block(Board_Maker.get_node(block2_string), best_block2)
 	
 	# Check for victory after blocks
-	if check_victory(Board) == 2:
+	if check_victory(AI_Pos, Player_Pos, Board) == 2:
 		defeat()
-	else:
-		change_turn()
-
-'''
-func ai_play():
-	var best_score: int = -INF
-	var best_board: Array = []
-	var best_move: Vector2
-	var best_block: Vector2
-	
-	var moves_bank = generate_moves(Board, AI_Pos, Player_Pos)
-	
-	for move_board in moves_bank:
-		#print("current move board:" )
-		#print_board(move_board)
-		var score = minimax(AI_Pos, Player_Pos, move_board, MINIMAX_DEPTH, -INF, INF, false)
-		if score >= best_score:
-			best_board = []
-			best_score = score
-			for row in move_board:
-				best_board.append(row.duplicate(true))
-
-			
-	# APPLY BEST MOVE
-	var changes = compare_boards(Board, best_board)
-	best_move = changes["move"]
-	best_block = changes["block"]
-	
-	var ai_pos_string :String = vector2_to_string(AI_Pos)
-	var best_move_string :String= vector2_to_string(best_move)
-	var best_block_string :String = vector2_to_string(best_block)
-	move_AI(best_move)
-	move_icon(Board_Maker.get_node(ai_pos_string), Board_Maker.get_node(best_move_string))
-	
-	
-	if check_victory(Board) == 2:
-		defeat()
-
-	place_block(Board_Maker.get_node(best_block_string), best_block)
-
-	# Check if opponent has any moves after
-	if check_victory(Board) == 2:
-		defeat()
+	if check_victory(AI_Pos, Player_Pos, Board) == 1:
+		victory()
 	else:
 		change_turn()
 
 
-
-func ai_play():
-	var eval = minimax(AI_Pos, Player_Pos, Board, 3, -INF, +INF, true)
-	
-	var ai_pos_string :String = vector2_to_string(AI_Pos)
-	var best_move_string :String= vector2_to_string(Best_Move)
-	var best_block_string :String = vector2_to_string(Best_Block)
-	# Move button icons
-	print ("Turn Number: ", Turn_Number)
-	print ("eval is ", eval)
-	print ("ai_pos_string:", ai_pos_string)
-	print ("Final Best Move is:", best_move_string)
-	print ("Final Best Block is:", best_block_string)
-	
-	
-	move_icon(Board_Maker.get_node(ai_pos_string), Board_Maker.get_node(best_move_string))
-	move_AI(Best_Move)
-	
-	if check_victory() == 2:
-		defeat()
-	
-	place_block(Board_Maker.get_node(best_block_string), Best_Block)
-	
-	# Check if opponent has any moves after
-	if check_victory() == 2:
-		defeat()
-	else:
-		change_turn()
-'''
 
 #region SIGNALS
 
@@ -852,19 +573,35 @@ func _on_board_maker_send_location(name, y, x) -> void:
 			move_icon(Board_Maker.get_node(player_pos_string), Board_Maker.get_node(new_pos_string), Signal_Pos)
 			
 			# Check if opponent has any moves after
-			if check_victory(Board) == 1:
+			if check_victory(AI_Pos, Player_Pos, Board) == 1:
 				victory()
+			elif check_victory(AI_Pos, Player_Pos, Board) == 2:
+				defeat()
 			else:
 				change_turn()
 	else:
-		if check_block(Signal_Pos, Board):
-			place_block(Board_Maker.get_node(new_pos_string), Signal_Pos)
-			
-			# Check if opponent has any moves after
-			if check_victory(Board) == 1:
-				victory()
-			else:
-				change_turn()
+		if Turn_Type == "Block1":
+			if check_block(Signal_Pos, Board):
+				place_block(Board_Maker.get_node(new_pos_string), Signal_Pos)
+				
+				# Check if opponent has any moves after
+				if check_victory(AI_Pos, Player_Pos, Board) == 1:
+					victory()
+				elif check_victory(AI_Pos, Player_Pos, Board) == 2:
+					defeat()
+				else:
+					change_turn()
+		elif Turn_Type == "Block2":
+			if check_block(Signal_Pos, Board):
+				place_block(Board_Maker.get_node(new_pos_string), Signal_Pos)
+				
+				# Check if opponent has any moves after
+				if check_victory(AI_Pos, Player_Pos, Board) == 1:
+					victory()
+				elif check_victory(AI_Pos, Player_Pos, Board) == 2:
+					defeat()
+				else:
+					change_turn()
 
 
 func _on_board_maker_board_ready() -> void:
@@ -879,7 +616,18 @@ func _on_board_maker_board_ready() -> void:
 
 func print_board(board: Array = Board) -> void:
 	for row in board:
-		print(row)
+		var line = ""
+		for i in row:
+			if i == 1:
+				line += "1"
+			elif i == 2:
+				line += "2"
+			elif i == -1:
+				line += "0"
+			else:
+				line += "_"
+		print(line)
+
 
 
 func test_calculate_position() -> void:
