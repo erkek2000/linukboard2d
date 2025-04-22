@@ -351,10 +351,9 @@ func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alp
 				best_block2 = move_data["block2"]
 			
 			# Alpha-Beta pruning
-			if GameData.PRUNING:
-				alpha = max(alpha, evalResult["eval"])
-				if beta <= alpha:
-					break
+			#alpha = max(alpha, evalResult["eval"])
+			#if beta <= alpha:
+				#break
 		
 		return {
 			"eval": maxEval,
@@ -394,10 +393,9 @@ func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alp
 				best_block2 = move_data["block2"]
 			
 			# Alpha-Beta pruning
-			if GameData.PRUNING:
-				beta = min(beta, evalResult["eval"])
-				if beta <= alpha:
-					break
+			#beta = min(beta, evalResult["eval"])
+			#if beta <= alpha:
+				#break
 		
 		return {
 			"eval": minEval,
