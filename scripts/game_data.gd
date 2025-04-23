@@ -2,6 +2,7 @@ extends Node
 
 @export var MINIMAX_DEPTH: int = 3
 @export var PRUNING: bool = false
+@export var CENTER_POS: bool = false
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:

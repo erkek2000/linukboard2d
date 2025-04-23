@@ -1,6 +1,9 @@
-[gd_scene load_steps=2 format=3 uid="uid://bl4pm6t7nvsc3"]
+[gd_scene load_steps=3 format=3 uid="uid://bl4pm6t7nvsc3"]
 
 [ext_resource type="Script" path="res://scripts/menu.gd" id="1_olqie"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_ttpff"]
+font_color = Color(1, 0, 0, 1)
 
 [node name="Menu" type="Node"]
 script = ExtResource("1_olqie")
@@ -19,20 +22,48 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
+theme_override_constants/separation = 10
 
 [node name="PlayButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
 text = "Play"
 
-[node name="MinimaxDepthSlider" type="HSlider" parent="VBoxContainer"]
+[node name="GameSettingsLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Game Settings:"
+
+[node name="WaitTimeLabel" type="Label" parent="VBoxContainer"]
 visible = false
 layout_mode = 2
+text = "Warning: minimax depth over 3 with pruning disabled may have long wait times."
+label_settings = SubResource("LabelSettings_ttpff")
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
 
-[node name="PruningCheckBox" type="CheckBox" parent="VBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="MinimaxDepthLabel" type="Label" parent="VBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "Minimax Depth:   3"
+
+[node name="MinimaxDepthSlider" type="HSlider" parent="VBoxContainer/VBoxContainer"]
+layout_mode = 2
+min_value = 1.0
+max_value = 10.0
+value = 3.0
+rounded = true
+
+[node name="PruningCheckBox" type="CheckButton" parent="VBoxContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 text = "Enable Pruning"
+
+[node name="CenterPositionsCheckButton" type="CheckButton" parent="VBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "Enable Center Positions"
 
 [node name="InfoButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
@@ -43,6 +74,8 @@ layout_mode = 2
 text = "Exit"
 
 [connection signal="pressed" from="VBoxContainer/PlayButton" to="." method="_on_play_button_pressed"]
-[connection signal="toggled" from="VBoxContainer/PruningCheckBox" to="." method="_on_pruning_check_box_toggled"]
+[connection signal="value_changed" from="VBoxContainer/VBoxContainer/MinimaxDepthSlider" to="." method="_on_minimax_depth_slider_value_changed"]
+[connection signal="toggled" from="VBoxContainer/VBoxContainer/PruningCheckBox" to="." method="_on_pruning_check_button_toggled"]
+[connection signal="toggled" from="VBoxContainer/VBoxContainer/CenterPositionsCheckButton" to="." method="_on_center_positions_check_button_toggled"]
 [connection signal="pressed" from="VBoxContainer/InfoButton" to="." method="_on_info_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/ExitButton" to="." method="_on_exit_button_pressed"]
