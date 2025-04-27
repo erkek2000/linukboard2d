@@ -16,9 +16,15 @@ var Turn: String = "Player Turn"
 # Can be "Move" or "Block1" or "Block2"
 var Turn_Type: String = "Move"
 # Gives Player Position, updated once every turn.
+<<<<<<< Updated upstream
 var Player_Pos: Vector2 = Vector2(7, 3)
 # Gives AI Position, updated once every turn.
 var AI_Pos: Vector2 = Vector2(0, 4)
+=======
+var Player_Pos: Vector2
+# Gives AI Position, updated once every turn.
+var AI_Pos: Vector2
+>>>>>>> Stashed changes
 # Gives Player Move Position, updated twice every turn.
 var Signal_Pos: Vector2 = Vector2(-1, -1)
 # Variable that changes every time board is clicked.
@@ -30,19 +36,36 @@ var Board_Maker : Node
 #var Best_Block: Vector2 = Vector2(-1, -1)
 var Turn_Number: int = 1
 
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 # Default func called when node enters the scene. (on load)
 func _ready() -> void:
 	#test_place_blocks_loop()
 	# Wait until buttons are ready. LOADING TIME
+<<<<<<< Updated upstream
 	await get_tree().create_timer(1.0).timeout
 	while Board_Maker == null:
 		continue
 		
 	print("Pruning is ", GameData.PRUNING)
+=======
+	await get_tree().create_timer(0.1).timeout
+	while Board_Maker == null:
+		continue
+		
+	print("minimax depth is ", GameData.MINIMAX_DEPTH)
+	
+>>>>>>> Stashed changes
 	initiate_board()
 	#run_game() # No longer needed.
 	# LOAD TIME - AI move calculations freeze board render otherwise.
 	await get_tree().create_timer(1.0).timeout
+<<<<<<< Updated upstream
+=======
+	
+>>>>>>> Stashed changes
 	determine_first_turn()
 	
 	#test_calculate_position()
@@ -71,17 +94,40 @@ func initiate_board() -> void:
 		for col in range(8):
 			new_row.append(0) # 0 for empty squares.
 		Board.append(new_row.duplicate(true))  # Add the row to the Board
+<<<<<<< Updated upstream
 	Board[7][3] = 1 # Player
 	Board[0][4] = 2 # AI
+=======
+	
+	if GameData.CENTER_POS:
+		Player_Pos = Vector2(4, 3)
+		AI_Pos = Vector2(3, 4)
+		Board[4][3] = 1 # Player
+		Board[3][4] = 2 # AI
+	else:
+		Player_Pos = Vector2(7, 3)
+		AI_Pos = Vector2(0, 4)
+		Board[7][3] = 1 # Player
+		Board[0][4] = 2 # AI
+>>>>>>> Stashed changes
 
 
 func determine_first_turn() -> void:
 	var first_turn : int = randi() % 2
 	if first_turn == 1:
+<<<<<<< Updated upstream
+=======
+		Board_Maker.turn_label.text = "Your Turn"
+>>>>>>> Stashed changes
 		Turn = "Player Turn"
 		print ("First Turn is ", Turn)
 		toggle_buttons(Board_Maker, true)
 	elif first_turn == 0:
+<<<<<<< Updated upstream
+=======
+		Board_Maker.turn_label.text = "AI is playing..."
+		await get_tree().create_timer(0.1).timeout
+>>>>>>> Stashed changes
 		Turn = "AI Turn"
 		print ("First Turn is ", Turn)
 		toggle_buttons(Board_Maker, false)
@@ -119,7 +165,11 @@ func vector2_to_string(vec: Vector2) -> String:
 
 
 # Not using the last parameter. Find out what that was.
+<<<<<<< Updated upstream
 func move_icon(old_pos :Node, new_pos: Node, on_board_new_pos: Vector2 = Vector2(-1,-1)):
+=======
+func move_icon(old_pos: Node, new_pos: Node, on_board_new_pos: Vector2):
+>>>>>>> Stashed changes
 	# Handle Button icons for positions
 	#print("old_pos.name: ", old_pos.name)
 	#print("new_pos.name: ", new_pos.name)
@@ -139,7 +189,11 @@ func move_player(new_pos: Vector2):
 func move_AI(new_pos: Vector2):
 	# Move on Board
 	Board[AI_Pos.x][AI_Pos.y] = 0
+<<<<<<< Updated upstream
 	Board[new_pos.x][new_pos.y] = 1
+=======
+	Board[new_pos.x][new_pos.y] = 2
+>>>>>>> Stashed changes
 	AI_Pos = new_pos
 
 
@@ -176,7 +230,33 @@ func check_block(pos: Vector2, board: Array) -> bool:
 	else:
 		return false
 
+<<<<<<< Updated upstream
 
+=======
+# NEVER USED
+func get_square_at(pos: Vector2, index: int) -> Vector2:
+	var directions: Array = [
+		Vector2(-1, -1),  # 0: Top-left
+		Vector2(0, -1),   # 1: Top
+		Vector2(1, -1),   # 2: Top-right
+		Vector2(1, 0),    # 3: Right
+		Vector2(1, 1),    # 4: Bottom-right
+		Vector2(0, 1),    # 5: Bottom
+		Vector2(-1, 1),   # 6: Bottom-left
+		Vector2(-1, 0)    # 7: Left
+	]
+	
+	if index < 0 or index > 7:
+		push_error("get_square_at called with invalid index: ", index)
+		return pos
+	
+	return pos + directions[index]
+
+
+
+
+'''
+>>>>>>> Stashed changes
 # Returns a list of move_data dictionaries, each containing:
 # - "board": the board state after the move and blocks
 # - "move": the position the player moved to
@@ -215,9 +295,13 @@ func generate_moves(board: Array, self_pos: Vector2, opponent_pos: Vector2) -> A
 				"move": new_pos
 			})
 			
+<<<<<<< Updated upstream
 	if Debug:
 		print("Found ", possible_moves.size(), " valid full ", player, " moves for the board:")
 		print_board(board)
+=======
+	
+>>>>>>> Stashed changes
 	
 	# Step 2: For each move, generate all possible block placements
 	for move_data in possible_moves:
@@ -279,6 +363,12 @@ func generate_moves(board: Array, self_pos: Vector2, opponent_pos: Vector2) -> A
 					"block1": block1,
 					"block2": block2
 				})
+<<<<<<< Updated upstream
+=======
+				if Debug:
+					print("Found ", all_plays.size(), " valid full ", player, " moves with the board:")
+					print_board(blocked_board)
+>>>>>>> Stashed changes
 	
 	return all_plays
 
@@ -304,12 +394,22 @@ func get_block_positions_around(board: Array, opponent_pos: Vector2) -> Array:
 	return block_positions
 
 
+<<<<<<< Updated upstream
 # Modified minimax function to work with the new generate_moves
+=======
+# alpha is the best score the maximizer can guarantee so far.
+# beta is the best score the minimizer can guarantee so far
+
+>>>>>>> Stashed changes
 func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alpha: int, beta: int, maximizingPlayer: bool) -> Dictionary:
 	# Terminal conditions: depth reached or victory detected
 	if depth == 0 or check_victory(ai_pos, player_pos, board) != 0:
 		if Debug:
+<<<<<<< Updated upstream
 			print("Depth 0 reached with board:")
+=======
+			print("End condition reached with board:")
+>>>>>>> Stashed changes
 			print("############")
 			print_board(board)
 			print("############")
@@ -351,9 +451,16 @@ func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alp
 				best_block2 = move_data["block2"]
 			
 			# Alpha-Beta pruning
+<<<<<<< Updated upstream
 			#alpha = max(alpha, evalResult["eval"])
 			#if beta <= alpha:
 				#break
+=======
+			if GameData.PRUNING:
+				alpha = max(alpha, evalResult["eval"])
+				if beta <= alpha:
+					break
+>>>>>>> Stashed changes
 		
 		return {
 			"eval": maxEval,
@@ -393,9 +500,243 @@ func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alp
 				best_block2 = move_data["block2"]
 			
 			# Alpha-Beta pruning
+<<<<<<< Updated upstream
 			#beta = min(beta, evalResult["eval"])
 			#if beta <= alpha:
 				#break
+=======
+			if GameData.PRUNING:
+				beta = min(beta, evalResult["eval"])
+				if beta <= alpha:
+					break
+		
+		return {
+			"eval": minEval,
+			"move": best_move,
+			"block1": best_block1,
+			"block2": best_block2
+		}
+'''
+
+func generate_moves(board: Array, self_pos: Vector2, opponent_pos: Vector2, move_index: int = 0) -> Dictionary:
+	# Directions for movement: diagonal and orthogonal
+	var directions = [
+		Vector2(-1, -1), Vector2(0, -1), Vector2(1, -1), Vector2(1, 0),
+		Vector2(1, 1), Vector2(0, 1), Vector2(-1, 1), Vector2(-1, 0)
+	]
+	
+	# Split move_index into movement and blocking components
+	var move_dir_idx = move_index % 8
+	var block1_idx = (move_index / 8) % 8
+	var block2_idx = move_index / 64
+	
+	# Get player info
+	var x = self_pos.x
+	var y = self_pos.y
+	var player = board[x][y]
+	
+	# Check if we've exhausted all moves
+	if move_dir_idx >= 8:
+		return {"completed": true}
+	
+	# Get movement direction
+	var direction = directions[move_dir_idx]
+	var new_pos = Vector2(x + direction.x, y + direction.y)
+	
+	# If this move is invalid, skip to next move
+	if not check_move(self_pos, new_pos, board):
+		return {
+			"completed": false,
+			"next_index": move_index + 1
+		}
+	
+	# Create board with move applied
+	var moved_board = []
+	for row in board:
+		moved_board.append(row.duplicate(true))
+	
+	moved_board[x][y] = 0
+	moved_board[new_pos.x][new_pos.y] = player
+	
+	# Calculate first block position
+	var block1_dir = directions[block1_idx]
+	var block1_pos = Vector2(opponent_pos.x + block1_dir.x, opponent_pos.y + block1_dir.y)
+	
+	# If first block position is invalid, try next block position
+	if not check_block(block1_pos, moved_board):
+		return {
+			"completed": false,
+			"next_index": move_index + 8 - (block1_idx * 8) + ((block2_idx) * 64)
+		}
+	
+	# Apply first block
+	var blocked_board = []
+	for row in moved_board:
+		blocked_board.append(row.duplicate(true))
+	
+	blocked_board[block1_pos.x][block1_pos.y] = -1
+	
+	# If we've reached the end of second blocks, move to next first block
+	if block2_idx >= 8:
+		return {
+			"completed": false,
+			"next_index": move_index + 8 - (block2_idx * 64)
+		}
+	
+	# Calculate second block position
+	var block2_dir = directions[block2_idx]
+	var block2_pos = Vector2(opponent_pos.x + block2_dir.x, opponent_pos.y + block2_dir.y)
+	
+	# If second block position is invalid, try next second block
+	if not check_block(block2_pos, blocked_board):
+		return {
+			"completed": false,
+			"next_index": move_index + 64
+		}
+	
+	# Apply second block
+	blocked_board[block2_pos.x][block2_pos.y] = -1
+	
+	# Return move data with next index
+	return {
+		"completed": false,
+		"next_index": move_index + 64,
+		"move_data": {
+			"board": blocked_board,
+			"move": new_pos,
+			"block1": block1_pos,
+			"block2": block2_pos
+		}
+	}
+
+
+func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alpha: int, beta: int, maximizingPlayer: bool) -> Dictionary:
+	# Terminal conditions: depth reached or victory detected
+	if depth == 0 or check_victory(ai_pos, player_pos, board) != 0:
+		return {
+			"eval": calculate_minimax_points(ai_pos, player_pos, board),
+			"move": Vector2(-1, -1),
+			"block1": Vector2(-1, -1),
+			"block2": Vector2(-1, -1)
+		}
+	
+	if maximizingPlayer:  # AI's turn (maximizing)
+		var maxEval = -INF
+		var best_move = Vector2(-1, -1)
+		var best_block1 = Vector2(-1, -1)
+		var best_block2 = Vector2(-1, -1)
+		
+		# Start generating moves incrementally
+		var move_index = 0
+		var completed = false
+		
+		while not completed:
+			var move_result = generate_moves(board, ai_pos, player_pos, move_index)
+			
+			# Check if we've generated all possible moves
+			if move_result.has("completed") and move_result["completed"]:
+				completed = true
+				continue
+			
+			# Update move_index for next iteration
+			move_index = move_result["next_index"]
+			
+			# Skip if no valid move was generated
+			if not move_result.has("move_data"):
+				continue
+			
+			var move_data = move_result["move_data"]
+			
+			# Update AI position for recursive call
+			var new_ai_pos = move_data["move"]
+			
+			# Alpha-Beta pruning moved here, before the recursive call
+			if GameData.PRUNING and beta <= alpha:
+				break
+			
+			# Recursive minimax call
+			var evalResult = minimax(
+				move_data["board"], 
+				new_ai_pos,
+				player_pos, 
+				depth - 1, 
+				alpha, 
+				beta, 
+				false
+			)
+			
+			if evalResult["eval"] > maxEval:
+				maxEval = evalResult["eval"]
+				best_move = move_data["move"]
+				best_block1 = move_data["block1"]
+				best_block2 = move_data["block2"]
+			
+			# Update alpha
+			if GameData.PRUNING:
+				alpha = max(alpha, evalResult["eval"])
+		
+		return {
+			"eval": maxEval,
+			"move": best_move,
+			"block1": best_block1,
+			"block2": best_block2
+		}
+		
+	else:  # Player's turn (minimizing)
+		var minEval = INF
+		var best_move = Vector2(-1, -1)
+		var best_block1 = Vector2(-1, -1)
+		var best_block2 = Vector2(-1, -1)
+		
+		# Start generating moves incrementally
+		var move_index = 0
+		var completed = false
+		
+		while not completed:
+			var move_result = generate_moves(board, player_pos, ai_pos, move_index)
+			
+			# Check if we've generated all possible moves
+			if move_result.has("completed") and move_result["completed"]:
+				completed = true
+				continue
+			
+			# Update move_index for next iteration
+			move_index = move_result["next_index"]
+			
+			# Skip if no valid move was generated
+			if not move_result.has("move_data"):
+				continue
+			
+			var move_data = move_result["move_data"]
+			
+			# Update player position for recursive call
+			var new_player_pos = move_data["move"]
+			
+			# Alpha-Beta pruning moved here, before the recursive call
+			if GameData.PRUNING and beta <= alpha:
+				break
+			
+			# Recursive minimax call
+			var evalResult = minimax(
+				move_data["board"], 
+				ai_pos,
+				new_player_pos, 
+				depth - 1, 
+				alpha, 
+				beta, 
+				true
+			)
+			
+			if evalResult["eval"] < minEval:
+				minEval = evalResult["eval"]
+				best_move = move_data["move"]
+				best_block1 = move_data["block1"]
+				best_block2 = move_data["block2"]
+			
+			# Update beta
+			if GameData.PRUNING:
+				beta = min(beta, evalResult["eval"])
+>>>>>>> Stashed changes
 		
 		return {
 			"eval": minEval,
@@ -405,19 +746,40 @@ func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alp
 		}
 
 
+<<<<<<< Updated upstream
+=======
+
+
+>>>>>>> Stashed changes
 func calculate_minimax_points(ai_pos: Vector2, player_pos: Vector2, board: Array) -> int:
 	# returns the difference between self position (max_pos) and player position (min_pos)
 	# Calculated by the amount of free blocks around each player.
 	if check_victory(ai_pos, player_pos, board) == 1:
+<<<<<<< Updated upstream
 		return -INF
 	elif check_victory(ai_pos, player_pos, board) == 2:
 		return INF
+=======
+		if Debug:
+			print("Victory for Player detected in eval")
+		return -100000
+	elif check_victory(ai_pos, player_pos, board) == 2:
+		if Debug:
+			print("Victory for AI detected in eval")
+		return 100000
+>>>>>>> Stashed changes
 	
 	var board_copy = board.duplicate(true)
 	var self_mobility: int = calculate_position(ai_pos.x, ai_pos.y, board_copy)
 	var opponent_mobility: int = calculate_position(player_pos.x, player_pos.y, board_copy)
 	var points: int = self_mobility - opponent_mobility
 	
+<<<<<<< Updated upstream
+=======
+	if self_mobility < 3:
+		points - 10
+	
+>>>>>>> Stashed changes
 	return points
 
 
@@ -432,6 +794,7 @@ func toggle_buttons(parent: Node, is_turn: bool):
 func change_turn() -> void:
 	if Turn == "Player Turn":
 		toggle_buttons(Board_Maker, true)
+<<<<<<< Updated upstream
 		if Turn_Type == "Move":
 			Turn_Type = "Block1"
 		elif Turn_Type == "Block1":
@@ -439,12 +802,30 @@ func change_turn() -> void:
 		else:
 			Turn_Number += 1
 			Turn = "AI Turn"
+=======
+		
+		if Turn_Type == "Move":
+			Turn_Type = "Block1"
+			Board_Maker.turn_label.text = "Your turn to 1st Block"
+		elif Turn_Type == "Block1":
+			Turn_Type = "Block2"
+			Board_Maker.turn_label.text = "Your turn to 2nd Block"
+		else:
+			Turn_Number += 1
+			Turn = "AI Turn"
+			Board_Maker.turn_label.text = "AI is playing..."
+			await get_tree().create_timer(0.1).timeout
+>>>>>>> Stashed changes
 			toggle_buttons(Board_Maker, false)
 			ai_play()
 	else:
 		Turn_Number += 1
 		Turn = "Player Turn"
 		Turn_Type = "Move"
+<<<<<<< Updated upstream
+=======
+		Board_Maker.turn_label.text = "Your turn to Move"
+>>>>>>> Stashed changes
 		toggle_buttons(Board_Maker, true)
 		#toggle_buttons(Board_Maker, false)
 		##ai_play()
@@ -485,6 +866,7 @@ func index_in_bounds(index: int, size: int) -> bool:
 
 
 # This func may just call Victory func and return nothing at all.
+<<<<<<< Updated upstream
 func check_victory(player_pos: Vector2, ai_pos: Vector2, board: Array) -> int:
 	var board_copy: Array = board.duplicate(true)
 	var player_victory: int = calculate_position(player_pos.x, player_pos.y, board_copy)
@@ -500,6 +882,26 @@ func check_victory(player_pos: Vector2, ai_pos: Vector2, board: Array) -> int:
 		print("eval for AI: ", ai_victory)
 		print ("VICTORY")
 		return 1 # Player Victory
+=======
+func check_victory(player_a_pos: Vector2, player_b_pos: Vector2, board: Array) -> int:
+	var board_copy: Array = board.duplicate(true)
+	var player_a = board[player_a_pos.x][player_a_pos.y]
+	var player_b = board[player_b_pos.x][player_b_pos.y]
+	var a_eval: int = calculate_position(player_a_pos.x, player_a_pos.y, board_copy)
+	var b_eval: int = calculate_position(player_b_pos.x, player_b_pos.y, board_copy)
+	
+	if a_eval <= 0:
+		if player_a == 1:
+			return 2 # AI Won
+		else:
+			return 1 # Player Won
+	elif b_eval <= 0:
+		if player_b == 1:
+			return 2 # AI Won
+		else:
+			return 1 # Player Won
+		
+>>>>>>> Stashed changes
 	else:
 		return 0 # Playable
 
@@ -507,13 +909,21 @@ func check_victory(player_pos: Vector2, ai_pos: Vector2, board: Array) -> int:
 func victory():
 	toggle_buttons(Board_Maker, false)
 	# Make victory pop up visible
+<<<<<<< Updated upstream
 	pass
+=======
+	Board_Maker.turn_label.text = "YOU WON"
+>>>>>>> Stashed changes
 
 
 func defeat():
 	toggle_buttons(Board_Maker, false)
 	# Make defeat pop up visible
+<<<<<<< Updated upstream
 	pass
+=======
+	Board_Maker.turn_label.text = "YOU LOST"
+>>>>>>> Stashed changes
 
 func ai_play():
 	# Get best move using minimax
@@ -528,7 +938,11 @@ func ai_play():
 	var best_move_string = vector2_to_string(best_move)
 	
 	# Move AI piece
+<<<<<<< Updated upstream
 	move_icon(Board_Maker.get_node(ai_pos_string), Board_Maker.get_node(best_move_string))
+=======
+	move_icon(Board_Maker.get_node(ai_pos_string), Board_Maker.get_node(best_move_string), best_move)
+>>>>>>> Stashed changes
 	move_AI(best_move)
 	
 	# Check for victory after move
@@ -619,6 +1033,11 @@ func _on_board_maker_board_ready() -> void:
 
 
 func print_board(board: Array = Board) -> void:
+<<<<<<< Updated upstream
+=======
+	#for row in board:
+		#print (row)
+>>>>>>> Stashed changes
 	for row in board:
 		var line = ""
 		for i in row:
