@@ -9,9 +9,8 @@ anchors_preset = 0
 script = ExtResource("1_3tyut")
 
 [node name="BoardMaker" type="FlowContainer" parent="."]
-layout_mode = 0
+layout_mode = 2
 offset_right = 40.0
-offset_bottom = 40.0
 script = ExtResource("1_3fxhg")
 
 [connection signal="board_ready" from="BoardMaker" to="." method="_on_board_maker_board_ready"]
