@@ -474,7 +474,7 @@ func generate_moves(board: Array, self_pos: Vector2, opponent_pos: Vector2, move
 	# If this move is invalid, skip to next move
 	if not check_move(self_pos, new_pos, board):
 		return {
-			"completed": false,
+			"completed": 0,
 			"next_index": move_index + 1
 		}
 	
@@ -491,12 +491,10 @@ func generate_moves(board: Array, self_pos: Vector2, opponent_pos: Vector2, move
 	# If first block position is invalid, try next block position
 	if not check_block(block1_pos, moved_board):
 		return {
-			"completed": false, 
-			"next_index": move_index + 8, 
-			"move_data": {
-				"board": moved_board,
-				"move": new_pos
-			}
+			"completed": 1, 
+			"next_index": move_index + 1,
+			"board": moved_board,
+			"move": new_pos
 		}
 	# fixed from "next_index": move_index + 8 - (move_index % 8)
 	
@@ -508,16 +506,15 @@ func generate_moves(board: Array, self_pos: Vector2, opponent_pos: Vector2, move
 	var block2_pos = Vector2(opponent_pos.x + block2_dir.x, opponent_pos.y + block2_dir.y)
 	
 	# If second block position is invalid, try next second block
-	if not check_block(block2_pos, moved_board) or block1_pos == block2_pos:
+	if (not check_block(block2_pos, moved_board)) or block1_pos == block2_pos:
 		return {
-			"completed": false,
-			"next_index": move_index + 8,
-			"move_data": {
-				"board": moved_board,
-				"move": new_pos,
-				"block1": block1_pos
-			}
+			"completed": 2,
+			"next_index": move_index + 1,
+			"board": moved_board,
+			"move": new_pos,
+			"block1": block1_pos
 		}
+		# MIGHT BE +64 ########################################
 	# fixed from "next_index": move_index + 64
 	
 	# Apply second block
@@ -525,15 +522,12 @@ func generate_moves(board: Array, self_pos: Vector2, opponent_pos: Vector2, move
 	
 	# Return move data with next index
 	return {
-		"completed": true,
+		"completed": 3,
 		"next_index": move_index + 1,
-		"move_data": {
-			"board": moved_board,
-			"move": new_pos,
-			"block1": block1_pos,
-			"block2": block2_pos
-		}
-	# Just put them all in the same indent later..
+		"board": moved_board,
+		"move": new_pos,
+		"block1": block1_pos,
+		"block2": block2_pos
 	}
 
 # alpha is the best score the maximizer can guarantee so far.
@@ -544,9 +538,9 @@ func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alp
 		var eval: int = calculate_minimax_points(ai_pos, player_pos, board)
 		return {
 			"eval": eval,
-			"move": Vector2(-2, -2),
-			"block1": Vector2(-2, -2),
-			"block2": Vector2(-2, -2)
+			"move": Vector2(-1, -1),
+			"block1": Vector2(-1, -1),
+			"block2": Vector2(-1, -1)
 		}
 	
 	if maximizingPlayer:  # AI's turn (maximizing)
@@ -559,45 +553,43 @@ func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alp
 		var move_index: int = 0
 		var max_iterations: int = 512  # Reasonable limit to prevent freezing
 		
-		while move_index <= max_iterations:
+		while move_index < max_iterations:
 			
 			var move_result = generate_moves(board, ai_pos, player_pos, move_index)
 			
-			move_index = move_result["next_index"]
 			
 			# if move_result.has("completed") and move_result["completed"]:
-			if move_result["completed"]:
+			if move_result["completed"] > 0:
 				var evalResult = minimax(
-				move_result["move_data"]["board"], 
-				move_result["move_data"]["move"], 
-				player_pos, 
-				depth - 1, 
-				alpha, 
-				beta, 
-				false
+					move_result["board"], 
+					move_result["move"], 
+					player_pos, 
+					depth - 1, 
+					alpha, 
+					beta, 
+					false
 				)
 				
 				if evalResult["eval"] > maxEval:
-					if Debug:
-						print("New best move found: ", move_result["move_data"]["move"], " with eval: ", evalResult["eval"])
 					maxEval = evalResult["eval"]
-					best_move = move_result["move_data"]["move"]
-					best_block1 = move_result["move_data"]["block1"]
-					best_block2 = move_result["move_data"]["block2"]
-			
+					best_move = move_result["move"]
+					if move_result["completed"] > 1:
+						best_block1 = move_result["block1"]
+					if move_result["completed"] > 2:
+						best_block2 = move_result["block2"]
+					if Debug:
+						print("New best move found: ", move_result["move"], " with eval: ", evalResult["eval"])
+					
 				# Alpha-Beta pruning
 				if GameData.PRUNING:
 					alpha = max(alpha, evalResult["eval"])
-					if beta <= alpha:
+					if beta <= alpha and best_move != Vector2(-1, -1):
 						break
 						
-						
-			if not move_result["completed"]:
-				# invalid move - move on.
-				continue
+			move_index = move_result["next_index"]
 		
 		if best_move == Vector2(-1, -1) and Debug:
-			print("WARNING: No valid moves found for AI!")
+			push_error("WARNING: No valid moves found for AI!")
 		
 		return {
 			"eval": maxEval,
@@ -615,36 +607,38 @@ func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alp
 		var move_index: int = 0
 		var max_iterations: int = 512
 		
-		while move_index <= max_iterations:
+		while move_index < max_iterations:
 			var move_result = generate_moves(board, player_pos, ai_pos, move_index)
-			move_index = move_result["next_index"]
 			
-			if move_result["completed"]:
+			
+			if move_result["completed"] > 0:
 				var evalResult = minimax(
-					move_result["move_data"]["board"],
+					move_result["board"], 
 					ai_pos,
-					move_result["move_data"]["move"],  # Player's new position
-					depth - 1,
-					alpha,
-					beta,
-					true  # Next turn switches to maximizing
+					move_result["move"],  # Player's new position
+					depth - 1, 
+					alpha, 
+					beta, 
+					true
 				)
 				
 				if evalResult["eval"] < minEval:
 					minEval = evalResult["eval"]
-					best_move = move_result["move_data"]["move"]
-					best_block1 = move_result["move_data"]["block1"]
-					best_block2 = move_result["move_data"]["block2"]
-				
-				# Alpha-Beta pruning (minimizer version)
+					best_move = move_result["move"]
+					if move_result["completed"] > 1:
+						best_block1 = move_result["block1"]
+					if move_result["completed"] > 2:
+						best_block2 = move_result["block2"]
+					if Debug:
+						print("New best move found: ", move_result["move"], " with eval: ", evalResult["eval"])
+					
+				# Alpha-Beta pruning
 				if GameData.PRUNING:
 					beta = min(beta, evalResult["eval"])
 					if beta <= alpha:
 						break
-					
-			if not move_result["completed"]:
-				continue
-				
+						
+			move_index = move_result["next_index"]
 		
 		return {
 			"eval": minEval,
