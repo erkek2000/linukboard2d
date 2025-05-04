@@ -1,8 +1,6 @@
 extends Control
 
 
-var Debug: bool = true
-
 # The Board
 var Board: Array = []
 #
@@ -35,6 +33,7 @@ var Turn_Number: int = 1
 func _ready() -> void:
 	#test_place_blocks_loop()
 	# Wait until buttons are ready. LOADING TIME
+	
 	await get_tree().create_timer(0.1).timeout
 	while Board_Maker == null:
 		continue
@@ -314,7 +313,7 @@ func generate_moves(board: Array, self_pos: Vector2, opponent_pos: Vector2) -> A
 					"block1": block1,
 					"block2": block2
 				})
-				if Debug:
+				if GameData.DEBUG:
 					print("Found ", all_plays.size(), " valid full ", player, " moves with the board:")
 					print_board(blocked_board)
 	
@@ -348,7 +347,7 @@ func get_block_positions_around(board: Array, opponent_pos: Vector2) -> Array:
 func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alpha: int, beta: int, maximizingPlayer: bool) -> Dictionary:
 	# Terminal conditions: depth reached or victory detected
 	if depth == 0 or check_victory(ai_pos, player_pos, board) != 0:
-		if Debug:
+		if GameData.DEBUG:
 			print("End condition reached with board:")
 			print("############")
 			print_board(board)
@@ -459,7 +458,7 @@ func generate_moves(board: Array, self_pos: Vector2, opponent_pos: Vector2, move
 	# Split move_index into movement and blocking components
 	var move_dir_idx: int = (move_index / 64) % 8 
 	var block1_idx: int = (move_index / 8) % 8
-	var block2_idx: int = move_index% 8 
+	var block2_idx: int = move_index % 8 
 	
 	# Get player info
 	var x: int = self_pos.x
@@ -479,7 +478,6 @@ func generate_moves(board: Array, self_pos: Vector2, opponent_pos: Vector2, move
 	
 	# Create board with move applied
 	var moved_board: Array = board.duplicate(true)
-	
 	moved_board[x][y] = 0
 	moved_board[new_pos.x][new_pos.y] = player
 	
@@ -543,28 +541,27 @@ func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alp
 		}
 	
 	if maximizingPlayer:  # AI's turn (maximizing)
-		var maxEval: int = -INF
+		var maxEval: int = -9223372036854775800
 		var best_move: Vector2 = Vector2(-1, -1)
 		var best_block1: Vector2 = Vector2(-1, -1)
 		var best_block2: Vector2 = Vector2(-1, -1)
 		
 		# Start generating moves incrementally
 		var move_index: int = 0
-		var max_iterations: int = 512  # Reasonable limit to prevent freezing
+		var max_index: int = 512  # Reasonable limit to prevent freezing
 		
-		while move_index < max_iterations:
+		while move_index < max_index:
 			
 			var move_result = generate_moves(board, ai_pos, player_pos, move_index)
 			
-			if Debug:
-				var move_dir_idx: int = move_index % 8
+			if GameData.DEBUG:
+				var move_dir_idx: int = (move_index / 64) % 8 
 				var block1_idx: int = (move_index / 8) % 8
-				var block2_idx: int = (move_index / 64) % 8 
-				print("Checking position in AI: ", block2_idx,block1_idx,move_dir_idx)
+				var block2_idx: int = move_index % 8 
+				print(depth, " depth, checking position in AI: ", move_dir_idx, block1_idx, block2_idx)
 				
 			
-			# if move_result.has("completed") and move_result["completed"]:
-			if move_result["completed"] > 0:
+			if move_result["completed"] == 3:
 				var evalResult = minimax(
 					move_result["board"], 
 					move_result["move"], 
@@ -574,25 +571,57 @@ func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alp
 					beta, 
 					false
 				)
-				print_board(move_result["board"])
+				#print("eval is ", evalResult["eval"], " maxeval is: ", maxEval)
 				if evalResult["eval"] > maxEval:
+					#print(evalResult["eval"], " is bigger than ", maxEval)
 					maxEval = evalResult["eval"]
 					best_move = move_result["move"]
-					if move_result["completed"] > 1:
-						best_block1 = move_result["block1"]
-					if move_result["completed"] > 2:
-						best_block2 = move_result["block2"]
-				
+					best_block1 = move_result["block1"]
+					best_block2 = move_result["block2"]
 				# Alpha-Beta pruning
 				if GameData.PRUNING:
 					alpha = max(alpha, evalResult["eval"])
-					if beta <= alpha and best_move != Vector2(-1, -1):
+					if beta <= alpha :#and best_move != Vector2(-1, -1):
 						break
-						
+			elif move_result["completed"] > 0:
+				# May call minimax depth 0 instead:
+				var victory : int = check_victory(move_result["move"], player_pos, move_result["board"])
+				if victory == 2:
+					if move_result["completed"] == 2:
+						return {
+							"eval" : 100000,
+							"move" : move_result["move"],
+							"block1" : move_result["block1"],
+							"block2": Vector2(-1, -1)
+						}
+					if move_result["completed"] == 1:
+						return {
+							"eval" : 100000,
+							"move" : move_result["move"],
+							"block1" : Vector2(-1, -1),
+							"block2": Vector2(-1, -1)
+						}
+				elif victory == 1:
+					return {
+							"eval" : -100000,
+							"move" : move_result["move"],
+							"block1" : move_result["block1"],
+							"block2": Vector2(-1, -1)
+						}
+					if move_result["completed"] == 1:
+						return {
+							"eval" : -100000,
+							"move" : move_result["move"],
+							"block1" : Vector2(-1, -1),
+							"block2": Vector2(-1, -1)
+						}
 			move_index = move_result["next_index"]
-		
-		if best_move == Vector2(-1, -1) and Debug:
+		if best_move == Vector2(-1, -1):
+			print("for ai:")
+			print_board(board)
 			push_error("WARNING: No valid moves found for AI!")
+			
+			
 		
 		return {
 			"eval": maxEval,
@@ -602,52 +631,83 @@ func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alp
 		}
 		
 	else:  # Player's turn (minimizing)
-		var minEval: int = INF
+		var minEval: int = 9223372036854775800
 		var best_move: Vector2 = Vector2(-1, -1)
 		var best_block1: Vector2 = Vector2(-1, -1)
 		var best_block2: Vector2 = Vector2(-1, -1)
 		
 		var move_index: int = 0
-		var max_iterations: int = 512
+		var max_index: int = 512
 		
-		while move_index < max_iterations:
+		while move_index < max_index:
 			var move_result = generate_moves(board, player_pos, ai_pos, move_index)
 			
-			if Debug:
-				var move_dir_idx: int = move_index % 8
+			if GameData.DEBUG:
+				var move_dir_idx: int = (move_index / 64) % 8 
 				var block1_idx: int = (move_index / 8) % 8
-				var block2_idx: int = (move_index / 64) % 8 
-				print("Checking position in Player: ", block2_idx,block1_idx,move_dir_idx)
+				var block2_idx: int = move_index % 8 
+				print(depth, " depth, checking position in PLAYER: ", move_dir_idx, block1_idx, block2_idx)
 			
-			if move_result["completed"] > 0:
+			if move_result["completed"] == 3:
 				var evalResult = minimax(
 					move_result["board"], 
-					ai_pos,
-					move_result["move"],  # Player's new position
+					ai_pos, 
+					move_result["move"], 
 					depth - 1, 
 					alpha, 
 					beta, 
 					true
 				)
-				
+				#print("eval is ", evalResult["eval"], " minEval is: ", minEval)
 				if evalResult["eval"] < minEval:
+					#print(evalResult["eval"], " is smaller than ", minEval)
 					minEval = evalResult["eval"]
 					best_move = move_result["move"]
-					if move_result["completed"] > 1:
-						best_block1 = move_result["block1"]
-					if move_result["completed"] > 2:
-						best_block2 = move_result["block2"]
-					
-					
+					best_block1 = move_result["block1"]
+					best_block2 = move_result["block2"]
+				
 				# Alpha-Beta pruning
 				if GameData.PRUNING:
 					beta = min(beta, evalResult["eval"])
-					if beta <= alpha and best_move != Vector2(-1, -1):
+					if beta <= alpha: # and best_move != Vector2(-1, -1):
 						break
-						
+			elif move_result["completed"] > 0:
+				var victory : int = check_victory(move_result["move"], ai_pos, move_result["board"])
+				if victory == 2:
+					if move_result["completed"] == 2:
+						return {
+							"eval" : 100000,
+							"move" : move_result["move"],
+							"block1" : move_result["block1"],
+							"block2": Vector2(-1, -1)
+						}
+					elif move_result["completed"] == 1:
+						return {
+							"eval" : 100000,
+							"move" : move_result["move"],
+							"block1" : Vector2(-1, -1),
+							"block2": Vector2(-1, -1)
+						}
+				elif victory == 1:
+					if move_result["completed"] == 2:
+						return {
+							"eval" : -100000,
+							"move" : move_result["move"],
+							"block1" : move_result["block1"],
+							"block2": Vector2(-1, -1)
+						}
+					elif move_result["completed"] == 1:
+						return {
+							"eval" : -100000,
+							"move" : move_result["move"],
+							"block1" : Vector2(-1, -1),
+							"block2": Vector2(-1, -1)
+						}
 			move_index = move_result["next_index"]
 		
-		if best_move == Vector2(-1, -1) and Debug:
+		if best_move == Vector2(-1, -1):
+			print("for player:")
+			print_board(board)
 			push_error("WARNING: No valid moves found for PLAYER!")
 		
 		return {
@@ -663,11 +723,11 @@ func calculate_minimax_points(ai_pos: Vector2, player_pos: Vector2, board: Array
 	# returns the difference between self position (max_pos) and player position (min_pos)
 	# Calculated by the amount of free blocks around each player.
 	if check_victory(ai_pos, player_pos, board) == 1:
-		if Debug:
+		if GameData.DEBUG:
 			print("Victory for Player detected in eval")
 		return -100000
 	elif check_victory(ai_pos, player_pos, board) == 2:
-		if Debug:
+		if GameData.DEBUG:
 			print("Victory for AI detected in eval")
 		return 100000
 	
@@ -754,17 +814,17 @@ func index_in_bounds(index: int, size: int) -> bool:
 # This func may just call Victory func and return nothing at all.
 func check_victory(player_a_pos: Vector2, player_b_pos: Vector2, board: Array) -> int:
 	var board_copy: Array = board.duplicate(true)
-	var player_a = board[player_a_pos.x][player_a_pos.y]
-	var player_b = board[player_b_pos.x][player_b_pos.y]
+	var player_a = board_copy[player_a_pos.x][player_a_pos.y]
+	var player_b = board_copy[player_b_pos.x][player_b_pos.y]
 	var a_eval: int = calculate_position(player_a_pos.x, player_a_pos.y, board_copy)
 	var b_eval: int = calculate_position(player_b_pos.x, player_b_pos.y, board_copy)
 	
-	if a_eval <= 0:
+	if a_eval == 0:
 		if player_a == 1:
 			return 2 # AI Won
 		else:
 			return 1 # Player Won
-	elif b_eval <= 0:
+	elif b_eval == 0:
 		if player_b == 1:
 			return 2 # AI Won
 		else:
@@ -916,15 +976,15 @@ func print_board(board: Array = Board) -> void:
 func test_calculate_position() -> void:
 	var oldBoard = [
 		[0, 1, 0, 0],
-		[0, 0, 1, 0],
-		[1, 0, 0, 0],
-		[0, 0, 0, 1]
+		[0, 0, 2, 0],
+		[0, 0, 0, 0],
+		[0, 0, 0, 0]
 	]
 
-	var result = calculate_position(1, 1, oldBoard)
+	var result = calculate_position(0, 1, oldBoard)
 	print("Test Case 1 - Expected: 5, Got: ", result)  # (1,1) has two adjacent zeroes
 
-	result = calculate_position(0, 0, oldBoard)
+	result = calculate_position(1,2, oldBoard)
 	print("Test Case 2 - Expected: 2, Got: ", result)  # (0,0) has one adjacent zero
 
 	result = calculate_position(2, 2, oldBoard)
@@ -938,8 +998,8 @@ func test_calculate_position() -> void:
 	
 func test_calculate_position2():
 	var test_board = [
-		[0, 0, 0, 0, 0, 0, 0, 0],
-		[0, 1, 0, -1, 0, 2, 0, 0],
+		[0, 1, 0, 0, 0, 0, 0, 0],
+		[0, 0, 2, -1, 0, 2, 0, 0],
 		[0, 0, 0, 0, 0, 0, 0, 0],
 		[0, -1, 0, 1, 2, 0, -1, 0],
 		[0, 0, 0, 2, 1, 0, 0, 0],
@@ -949,10 +1009,10 @@ func test_calculate_position2():
 	]
 
 	# Test case 1: Corner position (0,0)
-	print("Test Case 1 - Corner (0,0): Expected: 2, Got:", calculate_position(0, 0, test_board))
+	print("Test Case 1 - Corner (0,0): Expected: 2, Got:", calculate_position(0, 1, test_board))
 
 	# Test case 2: Edge position (0,3)
-	print("Test Case 2 - Edge (0,3): Expected: 4, Got:", calculate_position(0, 3, test_board))
+	print("Test Case 2 - Edge (0,3): Expected: 4, Got:", calculate_position(1, 2, test_board))
 
 	# Test case 3: Center position (3,3)
 	print("Test Case 3 - Center (3,3): Expected: 5, Got:", calculate_position(3, 3, test_board))
