@@ -23,6 +23,8 @@ func _ready():
 		
 		for x in Board_Size_X:
 			var temp = Button.new()
+			if GameData.DEBUG:
+				temp.text = str(y) + "-" + str(x)
 			temp.set_custom_minimum_size(Vector2(Tile_Size_X, Tile_Size_Y))
 			# Lambda func that sends button location signal to the Game.
 			# Dont use lambda func if possible in the future.
