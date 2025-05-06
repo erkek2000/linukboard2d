@@ -582,6 +582,7 @@ func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alp
 				if GameData.PRUNING:
 					alpha = max(alpha, evalResult["eval"])
 					if beta <= alpha :#and best_move != Vector2(-1, -1):
+						print("Pruning in AI with eval ", evalResult["eval"], " beta is ", beta, " alpha is ", alpha)
 						break
 			elif move_result["completed"] > 0:
 				# May call minimax depth 0 instead:
@@ -671,6 +672,7 @@ func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alp
 				if GameData.PRUNING:
 					beta = min(beta, evalResult["eval"])
 					if beta <= alpha: # and best_move != Vector2(-1, -1):
+						print("Pruning in Player with eval ", evalResult["eval"], " beta is ", beta, " alpha is ", alpha)
 						break
 			elif move_result["completed"] > 0:
 				var victory : int = check_victory(ai_pos, move_result["move"], move_result["board"], maximizing_player)
@@ -752,7 +754,6 @@ func toggle_buttons(parent: Node, is_turn: bool):
 
 # Maybe make this into an update game func
 func change_turn() -> void:
-	print_board(Board)
 	if Turn == "Player Turn":
 		toggle_buttons(Board_Maker, true)
 		
@@ -853,7 +854,7 @@ func defeat():
 
 func ai_play():
 	# Get best move using minimax
-	var result = minimax(Board, AI_Pos, Player_Pos, GameData.MINIMAX_DEPTH, -INF, INF, true)
+	var result = minimax(Board, AI_Pos, Player_Pos, GameData.MINIMAX_DEPTH, -9223372036854775800, 9223372036854775800, true)
 	var best_move = result["move"]
 	var best_block1 = result["block1"]
 	var best_block2 = result["block2"]
