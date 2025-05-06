@@ -344,7 +344,7 @@ func get_block_positions_around(board: Array, opponent_pos: Vector2) -> Array:
 # alpha is the best score the maximizer can guarantee so far.
 # beta is the best score the minimizer can guarantee so far
 
-func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alpha: int, beta: int, maximizingPlayer: bool) -> Dictionary:
+func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alpha: int, beta: int, maximizing_player: bool) -> Dictionary:
 	# Terminal conditions: depth reached or victory detected
 	if depth == 0 or check_victory(ai_pos, player_pos, board) != 0:
 		if GameData.DEBUG:
@@ -359,7 +359,7 @@ func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alp
 			"block2": Vector2(-1, -1)
 		}
 	
-	if maximizingPlayer:  # AI's turn (maximizing)
+	if maximizing_player:  # AI's turn (maximizing)
 		var maxEval = -INF
 		var best_move = Vector2(-1, -1)
 		var best_block1 = Vector2(-1, -1)
@@ -529,10 +529,10 @@ func generate_moves(board: Array, self_pos: Vector2, opponent_pos: Vector2, move
 
 # alpha is the best score the maximizer can guarantee so far.
 # beta is the best score the minimizer can guarantee so far
-func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alpha: int, beta: int, maximizingPlayer: bool) -> Dictionary:
+func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alpha: int, beta: int, maximizing_player: bool) -> Dictionary:
 	# Terminal conditions: depth reached or victory detected
-	if depth == 0 or check_victory(ai_pos, player_pos, board) != 0:
-		var eval: int = calculate_minimax_points(ai_pos, player_pos, board)
+	if depth == 0 or check_victory(ai_pos, player_pos, board, maximizing_player) != 0:
+		var eval: int = calculate_minimax_points(ai_pos, player_pos, board, maximizing_player)
 		return {
 			"eval": eval,
 			"move": Vector2(-1, -1),
@@ -540,7 +540,7 @@ func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alp
 			"block2": Vector2(-1, -1)
 		}
 	
-	if maximizingPlayer:  # AI's turn (maximizing)
+	if maximizing_player:  # AI's turn (maximizing)
 		var maxEval: int = -9223372036854775800
 		var best_move: Vector2 = Vector2(-1, -1)
 		var best_block1: Vector2 = Vector2(-1, -1)
@@ -585,7 +585,7 @@ func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alp
 						break
 			elif move_result["completed"] > 0:
 				# May call minimax depth 0 instead:
-				var victory : int = check_victory(move_result["move"], player_pos, move_result["board"])
+				var victory : int = check_victory(move_result["move"], player_pos, move_result["board"], maximizing_player)
 				if victory == 2:
 					if move_result["completed"] == 2:
 						return {
@@ -602,13 +602,14 @@ func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alp
 							"block2": Vector2(-1, -1)
 						}
 				elif victory == 1:
-					return {
-							"eval" : -100000,
-							"move" : move_result["move"],
-							"block1" : move_result["block1"],
-							"block2": Vector2(-1, -1)
-						}
 					if move_result["completed"] == 1:
+						return {
+								"eval" : -100000,
+								"move" : move_result["move"],
+								"block1" : move_result["block1"],
+								"block2": Vector2(-1, -1)
+						}
+					if move_result["completed"] == 2:
 						return {
 							"eval" : -100000,
 							"move" : move_result["move"],
@@ -672,7 +673,7 @@ func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alp
 					if beta <= alpha: # and best_move != Vector2(-1, -1):
 						break
 			elif move_result["completed"] > 0:
-				var victory : int = check_victory(move_result["move"], ai_pos, move_result["board"])
+				var victory : int = check_victory(ai_pos, move_result["move"], move_result["board"], maximizing_player)
 				if victory == 2:
 					if move_result["completed"] == 2:
 						return {
@@ -718,15 +719,15 @@ func minimax(board: Array, ai_pos: Vector2, player_pos: Vector2, depth: int, alp
 		}
 
 
-
-func calculate_minimax_points(ai_pos: Vector2, player_pos: Vector2, board: Array) -> int:
+# current player is 1 for player 2 for ai
+func calculate_minimax_points(ai_pos: Vector2, player_pos: Vector2, board: Array, maximizing_player: bool) -> int:
 	# returns the difference between self position (max_pos) and player position (min_pos)
 	# Calculated by the amount of free blocks around each player.
-	if check_victory(ai_pos, player_pos, board) == 1:
+	if check_victory(ai_pos, player_pos, board, maximizing_player) == 1:
 		if GameData.DEBUG:
 			print("Victory for Player detected in eval")
 		return -100000
-	elif check_victory(ai_pos, player_pos, board) == 2:
+	elif check_victory(ai_pos, player_pos, board, maximizing_player) == 2:
 		if GameData.DEBUG:
 			print("Victory for AI detected in eval")
 		return 100000
@@ -751,6 +752,7 @@ func toggle_buttons(parent: Node, is_turn: bool):
 
 # Maybe make this into an update game func
 func change_turn() -> void:
+	print_board(Board)
 	if Turn == "Player Turn":
 		toggle_buttons(Board_Maker, true)
 		
@@ -812,26 +814,30 @@ func index_in_bounds(index: int, size: int) -> bool:
 
 
 # This func may just call Victory func and return nothing at all.
-func check_victory(player_a_pos: Vector2, player_b_pos: Vector2, board: Array) -> int:
+# current_player 1 for Player, 2 for AI
+# Returns: 0 for no victory, 1 for Player victory, 2 for AI victory
+func check_victory(ai_pos: Vector2, player_pos: Vector2, board: Array, maximizing_player: bool) -> int:
 	var board_copy: Array = board.duplicate(true)
-	var player_a = board_copy[player_a_pos.x][player_a_pos.y]
-	var player_b = board_copy[player_b_pos.x][player_b_pos.y]
-	var a_eval: int = calculate_position(player_a_pos.x, player_a_pos.y, board_copy)
-	var b_eval: int = calculate_position(player_b_pos.x, player_b_pos.y, board_copy)
-	
-	if a_eval == 0:
-		if player_a == 1:
-			return 2 # AI Won
-		else:
-			return 1 # Player Won
-	elif b_eval == 0:
-		if player_b == 1:
-			return 2 # AI Won
-		else:
-			return 1 # Player Won
-		
-	else:
-		return 0 # Playable
+	var player_mobility: int = calculate_position(player_pos.x, player_pos.y, board_copy)
+	var ai_mobility: int = calculate_position(ai_pos.x, ai_pos.y, board_copy)
+   
+   # First check if the opponent of current player is trapped
+	if not maximizing_player:  # Player's turn
+	# Check if AI (opponent) is trapped
+		if ai_mobility == 0:
+			return 1  # Player wins
+	else:  # AI's turn
+	# Check if Player (opponent) is trapped
+		if player_mobility == 0:
+			return 2  # AI wins
+   
+   # Then check if current player trapped themselves
+	if not maximizing_player and player_mobility == 0:
+		return 2  # AI wins because Player trapped themselves
+	elif maximizing_player and ai_mobility == 0:
+		return 1  # Player wins because AI trapped itself
+   
+	return 0  # No victory yet
 
 
 func victory():
@@ -848,7 +854,6 @@ func defeat():
 func ai_play():
 	# Get best move using minimax
 	var result = minimax(Board, AI_Pos, Player_Pos, GameData.MINIMAX_DEPTH, -INF, INF, true)
-
 	var best_move = result["move"]
 	var best_block1 = result["block1"]
 	var best_block2 = result["block2"]
@@ -861,12 +866,12 @@ func ai_play():
 	move_icon(Board_Maker.get_node(ai_pos_string), Board_Maker.get_node(best_move_string), best_move)
 	move_AI(best_move)
 	
-	# Check for victory after blocks
-	# Can make match (switch)
-	if check_victory(AI_Pos, Player_Pos, Board) != 2:
-		defeat()
-	if check_victory(AI_Pos, Player_Pos, Board) == 1:
-		victory()
+	match check_victory(AI_Pos, Player_Pos, Board, true):
+		1:
+			victory()
+		2: 
+			defeat()
+	
 	
 	# Place first block
 	if best_block1 != Vector2(-1, -1):
@@ -874,10 +879,11 @@ func ai_play():
 		place_block(Board_Maker.get_node(block1_string), best_block1)
 	
 	# Check for victory after blocks
-	if check_victory(AI_Pos, Player_Pos, Board) == 2:
-		defeat()
-	if check_victory(AI_Pos, Player_Pos, Board) == 1:
-		victory()
+	match check_victory(AI_Pos, Player_Pos, Board, true):
+		1:
+			victory()
+		2: 
+			defeat()
 	
 	# Place second block
 	if best_block2 != Vector2(-1, -1):
@@ -885,13 +891,13 @@ func ai_play():
 		place_block(Board_Maker.get_node(block2_string), best_block2)
 	
 	# Check for victory after blocks
-	if check_victory(AI_Pos, Player_Pos, Board) == 2:
-		defeat()
-	if check_victory(AI_Pos, Player_Pos, Board) == 1:
-		victory()
-	else:
-		change_turn()
-
+	match check_victory(AI_Pos, Player_Pos, Board, true):
+		1:
+			victory()
+		2: 
+			defeat()
+		0:
+			change_turn()
 
 
 #region SIGNALS
@@ -915,35 +921,38 @@ func _on_board_maker_send_location(name, y, x) -> void:
 			move_icon(Board_Maker.get_node(player_pos_string), Board_Maker.get_node(new_pos_string), Signal_Pos)
 			
 			# Check if opponent has any moves after
-			if check_victory(AI_Pos, Player_Pos, Board) == 1:
-				victory()
-			elif check_victory(AI_Pos, Player_Pos, Board) == 2:
-				defeat()
-			else:
-				change_turn()
+			match check_victory(AI_Pos, Player_Pos, Board, false):
+				1:
+					victory()
+				2: 
+					defeat()
+				0:
+					change_turn()
 	else:
 		if Turn_Type == "Block1":
 			if check_block(Signal_Pos, Board):
 				place_block(Board_Maker.get_node(new_pos_string), Signal_Pos)
 				
 				# Check if opponent has any moves after
-				if check_victory(AI_Pos, Player_Pos, Board) == 1:
-					victory()
-				elif check_victory(AI_Pos, Player_Pos, Board) == 2:
-					defeat()
-				else:
-					change_turn()
+				match check_victory(AI_Pos, Player_Pos, Board, false):
+					1:
+						victory()
+					2: 
+						defeat()
+					0:
+						change_turn()
 		elif Turn_Type == "Block2":
 			if check_block(Signal_Pos, Board):
 				place_block(Board_Maker.get_node(new_pos_string), Signal_Pos)
 				
 				# Check if opponent has any moves after
-				if check_victory(AI_Pos, Player_Pos, Board) == 1:
-					victory()
-				elif check_victory(AI_Pos, Player_Pos, Board) == 2:
-					defeat()
-				else:
-					change_turn()
+				match check_victory(AI_Pos, Player_Pos, Board, false):
+					1:
+						victory()
+					2: 
+						defeat()
+					0:
+						change_turn()
 
 
 func _on_board_maker_board_ready() -> void:
