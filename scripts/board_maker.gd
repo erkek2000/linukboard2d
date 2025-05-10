@@ -67,7 +67,7 @@ func _ready():
 	var block_icon = ImageTexture.create_from_image(image3)
 	get_node("block").icon = block_icon
 	
-	# Create turn label AFTER all buttons
+	# Create turn label after all buttons
 	turn_label = Label.new()
 	turn_label.set_name("TurnLabel")
 	turn_label.text = "Loading"

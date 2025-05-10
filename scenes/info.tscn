@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://o4pyqbcay2t2"]
 
-[ext_resource type="Script" path="res://scripts/info.gd" id="1_2thcs"]
+[ext_resource type="Script" uid="uid://cratme02h5pa3" path="res://scripts/info.gd" id="1_2thcs"]
 
 [node name="Info" type="Node"]
 script = ExtResource("1_2thcs")

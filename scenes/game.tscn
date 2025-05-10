@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://bcvfonv5kitjp"]
 
-[ext_resource type="Script" path="res://scripts/board_maker.gd" id="1_3fxhg"]
-[ext_resource type="Script" path="res://scripts/game.gd" id="1_3tyut"]
+[ext_resource type="Script" uid="uid://ckgrdbk4fd72w" path="res://scripts/board_maker.gd" id="1_3fxhg"]
+[ext_resource type="Script" uid="uid://du75ga444ouls" path="res://scripts/game.gd" id="1_3tyut"]
 
 [node name="Game" type="Control"]
 layout_mode = 3

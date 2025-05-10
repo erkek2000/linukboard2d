@@ -22,16 +22,16 @@ func _on_center_positions_check_button_toggled(toggled_on: bool) -> void:
 
 func _on_pruning_check_button_toggled(toggled_on: bool) -> void:
 	GameData.PRUNING = toggled_on
-	if not GameData.PRUNING and GameData.MINIMAX_DEPTH > 3:
+	if GameData.MINIMAX_DEPTH > 3:
 		$VBoxContainer/WaitTimeLabel.visible = true
 	else:
 		$VBoxContainer/WaitTimeLabel.visible = false
 
 
-func _on_minimax_depth_slider_value_changed(value: float) -> void:
+func _on_minimax_depth_slider_value_changed(value: int) -> void:
 	$VBoxContainer/VBoxContainer/MinimaxDepthLabel.text = "Minimax Depth: " + str(value)
 	GameData.MINIMAX_DEPTH = value
-	if not GameData.PRUNING and GameData.MINIMAX_DEPTH > 3:
+	if GameData.MINIMAX_DEPTH > 3:
 		$VBoxContainer/WaitTimeLabel.visible = true
 	else:
 		$VBoxContainer/WaitTimeLabel.visible = false

@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://bl4pm6t7nvsc3"]
 
-[ext_resource type="Script" path="res://scripts/menu.gd" id="1_olqie"]
+[ext_resource type="Script" uid="uid://bwtsikidnp05k" path="res://scripts/menu.gd" id="1_olqie"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_ttpff"]
 font_color = Color(1, 0, 0, 1)
@@ -35,7 +35,7 @@ text = "Game Settings:"
 [node name="WaitTimeLabel" type="Label" parent="VBoxContainer"]
 visible = false
 layout_mode = 2
-text = "Warning: minimax depth over 3 with pruning disabled may have long wait times."
+text = "Warning: minimax depth over 3 may have long wait times."
 label_settings = SubResource("LabelSettings_ttpff")
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -51,7 +51,7 @@ text = "Minimax Depth:   3"
 [node name="MinimaxDepthSlider" type="HSlider" parent="VBoxContainer/VBoxContainer"]
 layout_mode = 2
 min_value = 1.0
-max_value = 10.0
+max_value = 6.0
 value = 3.0
 rounded = true
 
