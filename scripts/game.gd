@@ -23,17 +23,15 @@ var Signal_Pos: Vector2i = Vector2i(-1, -1)
 var New_Button_Signal: bool = false
 # BoardMaker Node - for accessing buttons
 var Board_Maker : Node
-# Best current moves for the AI.
-#var Best_Move: Vector2i = Vector2i(-1, -1)
-#var Best_Block: Vector2i = Vector2i(-1, -1)
+
 var Turn_Number: int = 1
 
 
 # Default func called when node enters the scene. (on load)
 func _ready() -> void:
 	#test_place_blocks_loop()
-	# Wait until buttons are ready. LOADING TIME
 	
+	# Wait until buttons are ready. LOADING TIME
 	await get_tree().create_timer(0.1).timeout
 	while Board_Maker == null:
 		continue
@@ -41,19 +39,12 @@ func _ready() -> void:
 	print("minimax depth is ", GameData.MINIMAX_DEPTH)
 	
 	initiate_board()
-	#run_game() # No longer needed.
+	
 	# LOAD TIME - AI move calculations freeze board render otherwise.
 	await get_tree().create_timer(1.0).timeout
 	
 	determine_first_turn()
 	
-	#test_calculate_position()
-	#print_board()
-	
-	#var b = get_node("7-3")
-	#b.set_button_icon()
-
-
 # Default func
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
@@ -102,32 +93,6 @@ func determine_first_turn() -> void:
 			print ("First Turn is ", Turn)
 		toggle_buttons(Board_Maker, false)
 		ai_play()
-
-
-
-# Useless implementation. Just move it to _ready in the future.
-func run_game() -> void:
-	
-	#test_calculate_position3()
-	
-	#determine_first_turn()
-	
-	# USE SIGNALS INSTEAD.
-	# check Get Move
-	# check_victory()
-	# change_turn()
-	# check Get Block
-	# check_victory()
-	# change_turn()
-	 # DISABLE BUTTONS
-	# AI PLAY
-	# check Get Move
-	# check_victory()
-	# change_turn()
-	# check Get Block
-	# check_victory()
-	# change_turn()
-	pass
 
 
 func vector2i_to_string(vec: Vector2i) -> String:
@@ -192,32 +157,19 @@ func check_block(pos: Vector2i, board: Array) -> bool:
 	else:
 		return false
 
-# NEVER USED
-func get_square_at(pos: Vector2i, index: int) -> Vector2i:
-	var directions: Array = [
-		Vector2i(-1, -1),  # 0: Top-left
-		Vector2i(0, -1),   # 1: Top
-		Vector2i(1, -1),   # 2: Top-right
-		Vector2i(1, 0),    # 3: Right
-		Vector2i(1, 1),    # 4: Bottom-right
-		Vector2i(0, 1),    # 5: Bottom
-		Vector2i(-1, 1),   # 6: Bottom-left
-		Vector2i(-1, 0)    # 7: Left
-	]
-	
-	if index < 0 or index > 7:
-		push_error("get_square_at called with invalid index: ", index)
-		return pos
-	
-	return pos + directions[index]
-
 
 # generates A SINGLE move with given index.
 func generate_moves(board: Array, self_pos: Vector2i, opponent_pos: Vector2i, move_index: int = 0) -> Dictionary:
-	# Directions for movement: diagonal and orthogonal
+	# Directions for movement:
 	var directions: Array = [
-		Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1), Vector2i(1, 0),
-		Vector2i(1, 1), Vector2i(0, 1), Vector2i(-1, 1), Vector2i(-1, 0)
+		Vector2i(-1, 1),   # bottom left
+		Vector2i(0, 1),    # bot
+		Vector2i(1, 1),    # botright
+		Vector2i(1, 0),    # right
+		Vector2i(1, -1),   # topright
+		Vector2i(0, -1),   # top
+		Vector2i(-1, -1),  # topleft
+		Vector2i(-1, 0)    # left
 	]
 	
 	# Split move_index into movement and blocking components
