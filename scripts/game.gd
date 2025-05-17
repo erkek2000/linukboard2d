@@ -322,24 +322,10 @@ func minimax(board: Array, ai_pos: Vector2i, player_pos: Vector2i, depth: int, a
 				# May call minimax depth 0 instead:
 				var victory : int = check_victory(move_result.move, player_pos, move_result.board, maximizing_player)
 				if victory == 2:
+					result.eval = 100000
+					result.move = move_result.move
 					if move_result.completed == 2:
-						result.eval = 100000
-						result.move = move_result.move
 						result.block1 = move_result.block1
-						return result
-					if move_result.completed == 1:
-						result.eval = 100000
-						result.move = move_result.move
-						return result
-				elif victory == 1:
-					if move_result.completed  == 1:
-						result.eval = -100000
-						result.move = move_result.move
-						result.block1 = move_result.block1
-						return result
-					if move_result.completed  == 2:
-						result.eval = -100000
-						result.move = move_result.move
 						return result
 			move_index = move_result.next_index
 			
@@ -401,26 +387,12 @@ func minimax(board: Array, ai_pos: Vector2i, player_pos: Vector2i, depth: int, a
 						break
 			elif move_result.completed > 0:
 				var victory : int = check_victory(ai_pos, move_result.move, move_result.board, maximizing_player)
-				if victory == 2:
+				if victory == 1:
+					result.eval = -100000
+					result.move = move_result.move
 					if move_result.completed == 2:
-						result.eval = 100000
-						result.move = move_result.move
 						result.block1 = move_result.block1
-						return result
-					elif move_result.completed == 1:
-						result.eval = 100000
-						result.move = move_result.move
-						return result
-				elif victory == 1:
-					if move_result.completed == 2:
-						result.eval = -100000
-						result.move = move_result.move
-						result.block1 = move_result.block1
-						return result
-					elif move_result.completed == 1:
-						result.eval = -100000
-						result.move = move_result.move
-						return result
+					return result
 			move_index = move_result.next_index
 			
 		if GameData.DEBUG:
