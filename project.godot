@@ -26,7 +26,7 @@ settings/profiler/max_functions=65535
 [display]
 
 window/size/viewport_width=640
-window/size/viewport_height=480
+window/size/viewport_height=640
 
 [network]
 

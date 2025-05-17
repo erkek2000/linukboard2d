@@ -5,6 +5,8 @@ extends FlowContainer
 @export var Tile_Size_Y: int = 50
 signal board_ready
 signal send_location
+signal return_to_menu
+signal reload_game
 
 # Reference to our turn label
 var turn_label: Label
@@ -76,6 +78,34 @@ func _ready():
 	turn_label.add_theme_font_size_override("font_size", 18)
 	add_child(turn_label)
 	
+	# Create a horizontal container for navigation buttons
+	var button_container = HBoxContainer.new()
+	button_container.set_name("NavigationButtons")
+	button_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	button_container.custom_minimum_size = Vector2(Board_Size_X * (Tile_Size_X + 5), 40)
+	add_child(button_container)
+	
+	# Create Return to Menu button
+	var menu_button = Button.new()
+	menu_button.set_name("ReturnToMenuButton")
+	menu_button.text = "Return to Menu"
+	menu_button.custom_minimum_size = Vector2(150, 30)
+	menu_button.connect("pressed", Callable(self, "_on_menu_button_pressed"))
+	button_container.add_child(menu_button)
+	
+	# Add some spacing between buttons
+	var spacer = Control.new()
+	spacer.custom_minimum_size = Vector2(20, 0)
+	button_container.add_child(spacer)
+	
+	# Create Reload Game button
+	var reload_button = Button.new()
+	reload_button.set_name("ReloadGameButton")
+	reload_button.text = "Reload Game"
+	reload_button.custom_minimum_size = Vector2(150, 30)
+	reload_button.connect("pressed", Callable(self, "_on_reload_button_pressed"))
+	button_container.add_child(reload_button)
+	
 	# Give board_ready signal to Game
 	self.connect("board_ready", Callable(self, "_on_board_ready"))
 	emit_signal("board_ready")
@@ -83,3 +113,11 @@ func _ready():
 # Function to update the turn label text
 func update_turn_text(text: String) -> void:
 	turn_label.text = text
+
+# Function that handles the Return to Menu button press
+func _on_menu_button_pressed() -> void:
+	emit_signal("return_to_menu")
+
+# Function that handles the Reload Game button press
+func _on_reload_button_pressed() -> void:
+	emit_signal("reload_game")

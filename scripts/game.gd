@@ -53,13 +53,17 @@ func _ready() -> void:
 	await get_tree().create_timer(0.1).timeout
 	while Board_Maker == null:
 		continue
-
+	
+	# Connect navigation buttons.
+	$BoardMaker.connect("return_to_menu", Callable(self, "_change_to_menu_scene"))
+	$BoardMaker.connect("reload_game", Callable(self, "_restart_current_game"))
+	
 	print("minimax depth is ", GameData.MINIMAX_DEPTH)
 	
 	initiate_board()
 	
 	# LOAD TIME - AI move calculations freeze board render otherwise.
-	await get_tree().create_timer(1.0).timeout
+	await get_tree().create_timer(0.1).timeout
 	
 	determine_first_turn()
 	
@@ -454,8 +458,8 @@ func change_turn() -> void:
 			Turn_Number += 1
 			Turn = "AI Turn"
 			Board_Maker.turn_label.text = "AI is playing..."
-			await get_tree().create_timer(0.1).timeout
 			toggle_buttons(Board_Maker, false)
+			await get_tree().create_timer(0.1).timeout
 			ai_play()
 	else:
 		Turn_Number += 1
@@ -648,6 +652,11 @@ func _on_board_maker_board_ready() -> void:
 	Board_Maker = self.get_child(0)
 	print("BoardMaker is ready!")
 
+func _change_to_menu_scene():
+	get_tree().change_scene_to_file("res://scenes/menu.tscn")
+	
+func _restart_current_game():
+	get_tree().reload_current_scene()
 
 #endregion
 
