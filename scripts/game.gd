@@ -407,17 +407,17 @@ func minimax(board: Array, ai_pos: Vector2i, player_pos: Vector2i, depth: int, a
 						result.move = move_result.move
 						result.block1 = move_result.block1
 						return result
-					elif move_result["completed"] == 1:
+					elif move_result.completed == 1:
 						result.eval = 100000
 						result.move = move_result.move
 						return result
 				elif victory == 1:
-					if move_result["completed"] == 2:
+					if move_result.completed == 2:
 						result.eval = -100000
 						result.move = move_result.move
 						result.block1 = move_result.block1
 						return result
-					elif move_result["completed"] == 1:
+					elif move_result.completed == 1:
 						result.eval = -100000
 						result.move = move_result.move
 						return result
