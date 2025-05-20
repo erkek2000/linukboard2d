@@ -108,7 +108,7 @@ func determine_first_turn() -> void:
 			print ("First Turn is ", Turn)
 		toggle_buttons(Board_Maker, true)
 	elif first_turn == 0:
-		Board_Maker.turn_label.text = "AI is playing..."
+		Board_Maker.turn_label.text = "AI is thinking..."
 		await get_tree().create_timer(0.1).timeout
 		Turn = "AI Turn"
 		if GameData.DEBUG:
@@ -272,7 +272,7 @@ func minimax(board: Array, ai_pos: Vector2i, player_pos: Vector2i, depth: int, a
 	
 	# Terminal conditions: depth reached or victory detected
 	if depth == 0 or check_victory(ai_pos, player_pos, board, maximizing_player) != 0:
-		var eval: int = calculate_minimax_points(ai_pos, player_pos, board, maximizing_player)
+		var eval: int = calculate_minimax_points(ai_pos, player_pos, board, maximizing_player, depth)
 		result.eval = eval
 		return result
 	
@@ -324,9 +324,9 @@ func minimax(board: Array, ai_pos: Vector2i, player_pos: Vector2i, depth: int, a
 						break
 			elif move_result.completed > 0:
 				# May call minimax depth 0 instead:
-				var victory : int = check_victory(move_result.move, player_pos, move_result.board, maximizing_player)
-				if victory == 2:
-					result.eval = 100000
+				var win : int = check_victory(move_result.move, player_pos, move_result.board, maximizing_player)
+				if win == 2:
+					result.eval = (100000 + (10*depth))
 					result.move = move_result.move
 					if move_result.completed == 2:
 						result.block1 = move_result.block1
@@ -390,9 +390,9 @@ func minimax(board: Array, ai_pos: Vector2i, player_pos: Vector2i, depth: int, a
 							print("Pruning in Player with eval ", eval_result.eval, " beta is ", beta, " alpha is ", alpha)
 						break
 			elif move_result.completed > 0:
-				var victory : int = check_victory(ai_pos, move_result.move, move_result.board, maximizing_player)
-				if victory == 1:
-					result.eval = -100000
+				var win : int = check_victory(ai_pos, move_result.move, move_result.board, maximizing_player)
+				if win == 1:
+					result.eval = (-100000 - (10*depth))
 					result.move = move_result.move
 					if move_result.completed == 2:
 						result.block1 = move_result.block1
@@ -413,17 +413,17 @@ func minimax(board: Array, ai_pos: Vector2i, player_pos: Vector2i, depth: int, a
 
 
 # 1 for player, 2 for ai
-func calculate_minimax_points(ai_pos: Vector2i, player_pos: Vector2i, board: Array, maximizing_player: bool) -> int:
+func calculate_minimax_points(ai_pos: Vector2i, player_pos: Vector2i, board: Array, maximizing_player: bool, depth: int) -> int:
 	# returns the difference between self position (max_pos) and player position (min_pos)
 	# Calculated by the amount of free blocks around each player.
 	if check_victory(ai_pos, player_pos, board, maximizing_player) == 1:
 		if GameData.DEBUG:
 			print("Victory for Player detected in eval")
-		return -100000
+		return (-100000 - (10*depth))
 	elif check_victory(ai_pos, player_pos, board, maximizing_player) == 2:
 		if GameData.DEBUG:
 			print("Victory for AI detected in eval")
-		return 100000
+		return (100000 + (10*depth))
 	
 	
 	var self_mobility: int = calculate_position(ai_pos.x, ai_pos.y, board)
@@ -457,7 +457,7 @@ func change_turn() -> void:
 		else:
 			Turn_Number += 1
 			Turn = "AI Turn"
-			Board_Maker.turn_label.text = "AI is playing..."
+			Board_Maker.turn_label.text = "AI is thinking..."
 			toggle_buttons(Board_Maker, false)
 			await get_tree().create_timer(0.1).timeout
 			ai_play()
@@ -542,10 +542,44 @@ func defeat():
 	# Make defeat pop up visible
 	Board_Maker.turn_label.text = "YOU LOST"
 
+
+func pseudo_iterative_depth():
+	
+	GameData.MINIMAX_DEPTH = 3 # Max depth with a feasible wait time
+	
+	var player_mobility: int = calculate_position(Player_Pos.x, Player_Pos.y, Board)
+	var ai_mobility: int = calculate_position(AI_Pos.x, AI_Pos.y, Board)
+	
+	if Turn_Number < 3: # Early game
+		GameData.MINIMAX_DEPTH = 2
+	if ai_mobility <= 3 or player_mobility <= 3: # Late game
+		GameData.MINIMAX_DEPTH = 5
+	#print ("iterative depth is ", GameData.MINIMAX_DEPTH)
+	
+
+
 func ai_play():
+	# Changes minimax depth based on board state and turn number
+	if GameData.ITERATIVE_DEPTH:
+		pseudo_iterative_depth()
+		
+	# START TIMER
+	var timer = Timer.new()
+	var start_time = Time.get_ticks_msec()
+	# Start the timer
+	add_child(timer)
+	timer.start()
+
 	# Get best move using minimax
 	var result : MinimaxResult = MinimaxResult.new()
 	result = minimax(Board, AI_Pos, Player_Pos, GameData.MINIMAX_DEPTH, -9223372036854775800, 9223372036854775800, true)
+	
+	# GET ELAPSED TIME:
+	timer.stop()
+	var time_elapsed = (Time.get_ticks_msec() - start_time) / 1000.0  # in seconds
+	print("minimax took: ", time_elapsed, " seconds with depth ", GameData.MINIMAX_DEPTH)
+	timer.queue_free()  # Clean up the timer node
+	
 	var best_move = result.move
 	var best_block1 = result.block1
 	var best_block2 = result.block2
@@ -557,6 +591,7 @@ func ai_play():
 	# Move AI piece
 	move_icon(Board_Maker.get_node(ai_pos_string), Board_Maker.get_node(best_move_string), best_move)
 	move_AI(best_move)
+	
 	
 	match check_victory(AI_Pos, Player_Pos, Board, true):
 		1:

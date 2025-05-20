@@ -28,6 +28,14 @@ func _on_pruning_check_button_toggled(toggled_on: bool) -> void:
 		$VBoxContainer/WaitTimeLabel.visible = false
 
 
+func _on_iterative_depth_check_button_toggled(toggled_on: bool) -> void:
+	GameData.ITERATIVE_DEPTH = toggled_on
+
+
+func _on_debug_check_button_toggled(toggled_on: bool) -> void:
+	GameData.DEBUG = toggled_on
+
+
 func _on_minimax_depth_slider_value_changed(value: int) -> void:
 	$VBoxContainer/VBoxContainer/MinimaxDepthLabel.text = "Minimax Depth: " + str(value)
 	GameData.MINIMAX_DEPTH = value

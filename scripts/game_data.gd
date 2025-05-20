@@ -4,6 +4,7 @@ extends Node
 @export var PRUNING: bool = false
 @export var CENTER_POS: bool = false
 @export var DEBUG: bool = false
+@export var ITERATIVE_DEPTH: bool = false
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:

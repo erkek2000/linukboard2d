@@ -30,6 +30,7 @@ text = "Play"
 
 [node name="GameSettingsLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
+size_flags_horizontal = 4
 text = "Game Settings:"
 
 [node name="WaitTimeLabel" type="Label" parent="VBoxContainer"]
@@ -46,6 +47,7 @@ layout_mode = 2
 
 [node name="MinimaxDepthLabel" type="Label" parent="VBoxContainer/VBoxContainer"]
 layout_mode = 2
+size_flags_horizontal = 4
 text = "Minimax Depth:   3"
 
 [node name="MinimaxDepthSlider" type="HSlider" parent="VBoxContainer/VBoxContainer"]
@@ -63,7 +65,21 @@ text = "Enable Pruning"
 
 [node name="CenterPositionsCheckButton" type="CheckButton" parent="VBoxContainer/VBoxContainer"]
 layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
 text = "Enable Center Positions"
+
+[node name="IterativeDepthCheckButton" type="CheckButton" parent="VBoxContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+text = "Enable Iterative Depth"
+
+[node name="DebugCheckButton" type="CheckButton" parent="VBoxContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+text = "Debug Enabled"
 
 [node name="InfoButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
@@ -77,5 +93,7 @@ text = "Exit"
 [connection signal="value_changed" from="VBoxContainer/VBoxContainer/MinimaxDepthSlider" to="." method="_on_minimax_depth_slider_value_changed"]
 [connection signal="toggled" from="VBoxContainer/VBoxContainer/PruningCheckBox" to="." method="_on_pruning_check_button_toggled"]
 [connection signal="toggled" from="VBoxContainer/VBoxContainer/CenterPositionsCheckButton" to="." method="_on_center_positions_check_button_toggled"]
+[connection signal="toggled" from="VBoxContainer/VBoxContainer/IterativeDepthCheckButton" to="." method="_on_iterative_depth_check_button_toggled"]
+[connection signal="toggled" from="VBoxContainer/VBoxContainer/DebugCheckButton" to="." method="_on_debug_check_button_toggled"]
 [connection signal="pressed" from="VBoxContainer/InfoButton" to="." method="_on_info_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/ExitButton" to="." method="_on_exit_button_pressed"]
