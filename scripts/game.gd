@@ -24,6 +24,7 @@ var New_Button_Signal: bool = false
 # BoardMaker Node - for accessing buttons
 var Board_Maker : Node
 
+var Late_Game : bool = false
 var Turn_Number: int = 1
 
 # Return type of generate_moves function.
@@ -430,8 +431,8 @@ func calculate_minimax_points(ai_pos: Vector2i, player_pos: Vector2i, board: Arr
 	var opponent_mobility: int = calculate_position(player_pos.x, player_pos.y, board)
 	var points: int = self_mobility - opponent_mobility
 	
-	#if self_mobility < 3:
-		#points -= 10
+	#if self_mobility <= 3:
+		#points -= 3
 	
 	return points
 
@@ -543,8 +544,10 @@ func defeat():
 	Board_Maker.turn_label.text = "YOU LOST"
 
 
-func pseudo_iterative_depth():
+func iterative_depth():
 	
+	if Late_Game:
+		return
 	GameData.MINIMAX_DEPTH = 3 # Max depth with a feasible wait time
 	
 	var player_mobility: int = calculate_position(Player_Pos.x, Player_Pos.y, Board)
@@ -553,6 +556,7 @@ func pseudo_iterative_depth():
 	if Turn_Number < 3: # Early game
 		GameData.MINIMAX_DEPTH = 2
 	if ai_mobility <= 3 or player_mobility <= 3: # Late game
+		Late_Game = true
 		GameData.MINIMAX_DEPTH = 5
 	#print ("iterative depth is ", GameData.MINIMAX_DEPTH)
 	
@@ -561,7 +565,7 @@ func pseudo_iterative_depth():
 func ai_play():
 	# Changes minimax depth based on board state and turn number
 	if GameData.ITERATIVE_DEPTH:
-		pseudo_iterative_depth()
+		iterative_depth()
 		
 	# START TIMER
 	var timer = Timer.new()
@@ -688,6 +692,13 @@ func _on_board_maker_board_ready() -> void:
 	print("BoardMaker is ready!")
 
 func _change_to_menu_scene():
+	# Set global variables to default
+	GameData.MINIMAX_DEPTH = 3
+	GameData.PRUNING = false
+	GameData.CENTER_POS = false
+	GameData.DEBUG = false
+	GameData.ITERATIVE_DEPTH = false
+	# Set scene
 	get_tree().change_scene_to_file("res://scenes/menu.tscn")
 	
 func _restart_current_game():
