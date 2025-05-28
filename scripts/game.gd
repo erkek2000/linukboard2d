@@ -27,6 +27,28 @@ var Board_Maker : Node
 var Late_Game : bool = false
 var Turn_Number: int = 1
 
+#Test variables
+var Minimax_Called =  {
+	"depth0": 0,
+	"depth1": 0,
+	"depth2": 0,
+	"depth3": 0,
+	"depth4": 0,
+	"depth5": 0,
+	"depth6": 0
+}
+var Pruning_Called = {
+	"depth0": 0,
+	"depth1": 0,
+	"depth2": 0,
+	"depth3": 0,
+	"depth4": 0,
+	"depth5": 0,
+	"depth6": 0
+}
+var Branching_Factor: int = 0
+var Pruned_Branches: int = 0
+
 # Return type of generate_moves function.
 class MoveResult:
 	var completed: int = 0
@@ -270,7 +292,21 @@ func generate_moves(board: Array, self_pos: Vector2i, opponent_pos: Vector2i, mo
 # beta is the best score the minimizer can guarantee so far
 func minimax(board: Array, ai_pos: Vector2i, player_pos: Vector2i, depth: int, alpha: int, beta: int, maximizing_player: bool) -> MinimaxResult:
 	var result: MinimaxResult = MinimaxResult.new()
-	
+	match depth:
+		0:
+			Minimax_Called["depth0"] += 1
+		1:
+			Minimax_Called["depth1"] += 1
+		2:
+			Minimax_Called["depth2"] += 1
+		3:
+			Minimax_Called["depth3"] += 1
+		4:
+			Minimax_Called["depth4"] += 1
+		5:
+			Minimax_Called["depth5"] += 1
+		6:
+			Minimax_Called["depth6"] += 1
 	# Terminal conditions: depth reached or victory detected
 	if depth == 0 or check_victory(ai_pos, player_pos, board, maximizing_player) != 0:
 		var eval: int = calculate_minimax_points(ai_pos, player_pos, board, maximizing_player, depth)
@@ -320,6 +356,21 @@ func minimax(board: Array, ai_pos: Vector2i, player_pos: Vector2i, depth: int, a
 				if GameData.PRUNING:
 					alpha = max(alpha, eval_result.eval)
 					if beta <= alpha:
+						match depth:
+							0:
+								Pruning_Called["depth0"] += 1
+							1:
+								Pruning_Called["depth1"] += 1
+							2:
+								Pruning_Called["depth2"] += 1
+							3:
+								Pruning_Called["depth3"] += 1
+							4:
+								Pruning_Called["depth4"] += 1
+							5:
+								Pruning_Called["depth5"] += 1
+							6:
+								Pruning_Called["depth6"] += 1
 						if GameData.DEBUG:
 							print("Pruning in AI with eval ", eval_result.eval, " beta is ", beta, " alpha is ", alpha)
 						break
@@ -387,6 +438,21 @@ func minimax(board: Array, ai_pos: Vector2i, player_pos: Vector2i, depth: int, a
 				if GameData.PRUNING:
 					beta = min(beta, eval_result.eval)
 					if beta <= alpha:
+						match depth:
+							0:
+								Pruning_Called["depth0"] += 1
+							1:
+								Pruning_Called["depth1"] += 1
+							2:
+								Pruning_Called["depth2"] += 1
+							3:
+								Pruning_Called["depth3"] += 1
+							4:
+								Pruning_Called["depth4"] += 1
+							5:
+								Pruning_Called["depth5"] += 1
+							6:
+								Pruning_Called["depth6"] += 1
 						if GameData.DEBUG:
 							print("Pruning in Player with eval ", eval_result.eval, " beta is ", beta, " alpha is ", alpha)
 						break
@@ -577,6 +643,23 @@ func ai_play():
 	# Get best move using minimax
 	var result : MinimaxResult = MinimaxResult.new()
 	result = minimax(Board, AI_Pos, Player_Pos, GameData.MINIMAX_DEPTH, -9223372036854775800, 9223372036854775800, true)
+	print("Minimax Called is ",Minimax_Called)
+	print("Pruning Called is ",Pruning_Called)
+	Minimax_Called["depth0"] = 0
+	Minimax_Called["depth1"] = 0
+	Minimax_Called["depth2"] = 0
+	Minimax_Called["depth3"] = 0
+	Minimax_Called["depth4"] = 0
+	Minimax_Called["depth5"] = 0
+	Minimax_Called["depth6"] = 0
+	
+	Pruning_Called["depth0"] = 0
+	Pruning_Called["depth1"] = 0
+	Pruning_Called["depth2"] = 0
+	Pruning_Called["depth3"] = 0
+	Pruning_Called["depth4"] = 0
+	Pruning_Called["depth5"] = 0
+	Pruning_Called["depth6"] = 0
 	
 	# GET ELAPSED TIME:
 	timer.stop()

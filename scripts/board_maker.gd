@@ -16,7 +16,7 @@ func _ready():
 	# Load icons
 	var player_1_icon_raw = preload("res://assets/icon.svg")
 	var player_2_icon_raw = preload("res://assets/icon2.svg")
-	var block_icon_raw = preload("res://assets/block.svg")
+	var block_icon_raw = preload("res://assets/greenBlock.svg")
 	
 	# Set up the board - make button children
 	for y in Board_Size_Y:
