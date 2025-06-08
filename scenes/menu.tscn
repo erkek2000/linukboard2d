@@ -36,7 +36,7 @@ text = "Game Settings:"
 [node name="WaitTimeLabel" type="Label" parent="VBoxContainer"]
 visible = false
 layout_mode = 2
-text = "Warning: minimax depth over 3 may have long wait times."
+text = "Warning: Minimax depth over 3 may have long wait times."
 label_settings = SubResource("LabelSettings_ttpff")
 horizontal_alignment = 1
 vertical_alignment = 1

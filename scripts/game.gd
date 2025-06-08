@@ -27,6 +27,8 @@ var Board_Maker : Node
 var Late_Game : bool = false
 var Turn_Number: int = 1
 
+var moves_array_test = []
+
 #Test variables
 var Minimax_Called =  {
 	"depth0": 0,
@@ -324,6 +326,7 @@ func minimax(board: Array, ai_pos: Vector2i, player_pos: Vector2i, depth: int, a
 		var max_index: int = 512
 		
 		while move_index < max_index:
+			#moves_array_test.append(move_index)
 			var move_result : MoveResult = MoveResult.new()
 			move_result = generate_moves(board, ai_pos, player_pos, move_index)
 			
@@ -624,7 +627,7 @@ func iterative_depth():
 	if ai_mobility <= 3 or player_mobility <= 3: # Late game
 		Late_Game = true
 		GameData.MINIMAX_DEPTH = 5
-	#print ("iterative depth is ", GameData.MINIMAX_DEPTH)
+	print ("iterative-depth active, depth is set to ", GameData.MINIMAX_DEPTH)
 	
 
 
@@ -661,11 +664,16 @@ func ai_play():
 	Pruning_Called["depth5"] = 0
 	Pruning_Called["depth6"] = 0
 	
+	
+	
 	# GET ELAPSED TIME:
 	timer.stop()
 	var time_elapsed = (Time.get_ticks_msec() - start_time) / 1000.0  # in seconds
 	print("minimax took: ", time_elapsed, " seconds with depth ", GameData.MINIMAX_DEPTH)
 	timer.queue_free()  # Clean up the timer node
+	
+	#print(moves_array_test)
+	#moves_array_test.clear()
 	
 	var best_move = result.move
 	var best_block1 = result.block1
@@ -790,6 +798,18 @@ func _restart_current_game():
 #endregion
 
 #region TEST_FUNCTIONS
+
+
+# Function to check and print all duplicate numbers
+func print_duplicates() -> void:
+	var counts := {}
+	for num in moves_array_test:
+		counts[num] = counts.get(num, 0) + 1
+	
+	print("Duplicates:")
+	for num in counts:
+		if counts[num] > 1:
+			print(num, " appears ", counts[num], " times")
 
 
 func print_board(board: Array = Board) -> void:
