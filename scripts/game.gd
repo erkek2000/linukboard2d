@@ -294,6 +294,7 @@ func generate_moves(board: Array, self_pos: Vector2i, opponent_pos: Vector2i, mo
 # beta is the best score the minimizer can guarantee so far
 func minimax(board: Array, ai_pos: Vector2i, player_pos: Vector2i, depth: int, alpha: int, beta: int, maximizing_player: bool) -> MinimaxResult:
 	var result: MinimaxResult = MinimaxResult.new()
+	# Add to hash for tests
 	match depth:
 		0:
 			Minimax_Called["depth0"] += 1
@@ -336,7 +337,7 @@ func minimax(board: Array, ai_pos: Vector2i, player_pos: Vector2i, depth: int, a
 				var block2_idx: int = move_index % 8 
 				print(depth, " depth, checking position in AI: ", move_dir_idx, block1_idx, block2_idx)
 				
-			
+			# A FULL Move is generated - proceed:
 			if move_result.completed == 3:
 				var eval_result : MinimaxResult = MinimaxResult.new()
 				eval_result = minimax(
@@ -348,7 +349,8 @@ func minimax(board: Array, ai_pos: Vector2i, player_pos: Vector2i, depth: int, a
 					beta, 
 					false
 				)
-
+				
+				# New best eval found:
 				if eval_result.eval > maxEval:
 					maxEval = eval_result.eval
 					best_move = move_result.move
@@ -359,26 +361,14 @@ func minimax(board: Array, ai_pos: Vector2i, player_pos: Vector2i, depth: int, a
 				if GameData.PRUNING:
 					alpha = max(alpha, eval_result.eval)
 					if beta <= alpha:
-						match depth:
-							0:
-								Pruning_Called["depth0"] += 1
-							1:
-								Pruning_Called["depth1"] += 1
-							2:
-								Pruning_Called["depth2"] += 1
-							3:
-								Pruning_Called["depth3"] += 1
-							4:
-								Pruning_Called["depth4"] += 1
-							5:
-								Pruning_Called["depth5"] += 1
-							6:
-								Pruning_Called["depth6"] += 1
 						if GameData.DEBUG:
 							print("Pruning in AI with eval ", eval_result.eval, " beta is ", beta, " alpha is ", alpha)
 						break
 			elif move_result.completed > 0:
 				# May call minimax depth 0 instead:
+				# Add to depth0 generation for test
+				Minimax_Called["depth0"] += 1
+				
 				var win : int = check_victory(move_result.move, player_pos, move_result.board, maximizing_player)
 				if win == 2:
 					result.eval = (100000 + (10*depth))
@@ -394,6 +384,7 @@ func minimax(board: Array, ai_pos: Vector2i, player_pos: Vector2i, depth: int, a
 				print_board(board)
 				push_error("WARNING: No valid moves found for AI!")
 			
+		# Return best moves and eval:
 		result.eval = maxEval
 		result.move = best_move
 		result.block1 = best_block1
@@ -441,25 +432,14 @@ func minimax(board: Array, ai_pos: Vector2i, player_pos: Vector2i, depth: int, a
 				if GameData.PRUNING:
 					beta = min(beta, eval_result.eval)
 					if beta <= alpha:
-						match depth:
-							0:
-								Pruning_Called["depth0"] += 1
-							1:
-								Pruning_Called["depth1"] += 1
-							2:
-								Pruning_Called["depth2"] += 1
-							3:
-								Pruning_Called["depth3"] += 1
-							4:
-								Pruning_Called["depth4"] += 1
-							5:
-								Pruning_Called["depth5"] += 1
-							6:
-								Pruning_Called["depth6"] += 1
 						if GameData.DEBUG:
 							print("Pruning in Player with eval ", eval_result.eval, " beta is ", beta, " alpha is ", alpha)
 						break
 			elif move_result.completed > 0:
+				# May call minimax depth 0 instead:
+				# Add to depth0 generation for test
+				Minimax_Called["depth0"] += 1
+				
 				var win : int = check_victory(ai_pos, move_result.move, move_result.board, maximizing_player)
 				if win == 1:
 					result.eval = (-100000 - (10*depth))

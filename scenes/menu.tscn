@@ -70,6 +70,7 @@ size_flags_vertical = 4
 text = "Enable Center Positions"
 
 [node name="IterativeDepthCheckButton" type="CheckButton" parent="VBoxContainer/VBoxContainer"]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
