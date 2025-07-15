@@ -1,9 +1,11 @@
 extends Node
 
+
 @export var MINIMAX_DEPTH: int = 3
 @export var PRUNING: bool = false
 @export var CENTER_POS: bool = false
 @export var DEBUG: bool = false
+# Pseudo iterative depth button is made invisible for the project.
 @export var ITERATIVE_DEPTH: bool = false
 
 # Called when the node enters the scene tree for the first time.

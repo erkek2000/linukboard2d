@@ -594,7 +594,7 @@ func defeat():
 
 
 func iterative_depth():
-	
+	# Pseudo iterative depth button is made invisible for the project.
 	if Late_Game:
 		return
 	GameData.MINIMAX_DEPTH = 3 # Max depth with a feasible wait time
@@ -612,6 +612,7 @@ func iterative_depth():
 
 
 func ai_play():
+	# Pseudo iterative depth button is made invisible for the project.
 	# Changes minimax depth based on board state and turn number
 	if GameData.ITERATIVE_DEPTH:
 		iterative_depth()
@@ -780,18 +781,7 @@ func _restart_current_game():
 #region TEST_FUNCTIONS
 
 
-# Function to check and print all duplicate numbers
-func print_duplicates() -> void:
-	var counts := {}
-	for num in moves_array_test:
-		counts[num] = counts.get(num, 0) + 1
-	
-	print("Duplicates:")
-	for num in counts:
-		if counts[num] > 1:
-			print(num, " appears ", counts[num], " times")
-
-
+# Prints board
 func print_board(board: Array = Board) -> void:
 	#for row in board:
 		#print (row)
@@ -808,6 +798,17 @@ func print_board(board: Array = Board) -> void:
 				line += "_"
 		print(line)
 
+
+# Function to check and print all duplicate numbers
+func print_duplicates() -> void:
+	var counts := {}
+	for num in moves_array_test:
+		counts[num] = counts.get(num, 0) + 1
+	
+	print("Duplicates:")
+	for num in counts:
+		if counts[num] > 1:
+			print(num, " appears ", counts[num], " times")
 
 
 func test_calculate_position() -> void:
@@ -911,50 +912,6 @@ func test_block_positions_equality(block1_pos: Vector2i, block2_pos: Vector2i) -
 		print("Test Passed: block1_pos ", block1_pos, " is equal to block2_pos ", block2_pos)
 	else:
 		print("Test Failed: block1_pos ", block1_pos, " is NOT equal to block2_pos ", block2_pos)
-
-
-
-func test_place_blocks_loop():
-	var test_board = [
-		[0, 0, 0, 0, 0, 0, 0],
-		[0, 0, 0, 0, 0, 0, 0],
-		[0, 0, 3, 3, 3, 0, 0],
-		[0, 0, 3, 1, 3, 0, 0],
-		[0, 0, 3, 3, 0, 0, 0],
-		[0, 0, 0, 0, 0, 0, 0],
-		[0, 0, 0, 0, 0, 0, 0],
-		[0, 0, 0, 0, 0, 0, 0]
-	]
-	
-	var opponent_pos = Vector2i(3, 3)
-	var board_size: int = 7
-	var blocks_placed: int = 0
-	var radius: int = 1
-
-	while blocks_placed < 2 and radius <= 8:
-		for x in range(-radius, radius + 1):
-			for y in range(-radius, radius + 1):
-				var block_pos = Vector2i(opponent_pos.x + x, opponent_pos.y + y)
-				
-				#Check Board bounds - This check is essential 
-				if block_pos.x < 0 or block_pos.x >= board_size or block_pos.y < 0 or block_pos.y >= board_size:
-					continue #Skip and move to the next step
-					
-				# Check if it's empty and place 2 only
-				if test_board[int(block_pos.x)][int(block_pos.y)] == 0:
-					test_board[int(block_pos.x)][int(block_pos.y)] = 2
-					print("Placed 2 at:", block_pos)  # Print for demonstration
-					blocks_placed += 1
-					if blocks_placed == 2:
-						break  #Placing two blocks
-			if blocks_placed == 2:
-				break  #Placed two blocks
-		if blocks_placed < 2:  #If positions filled then increase radius
-			radius += 1
-
-	#Print final board to see the layout.
-	for row in test_board:
-		print(row)
 
 
 #endregion

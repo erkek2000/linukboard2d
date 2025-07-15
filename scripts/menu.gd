@@ -28,6 +28,7 @@ func _on_pruning_check_button_toggled(toggled_on: bool) -> void:
 		$VBoxContainer/WaitTimeLabel.visible = false
 
 
+# Pseudo iterative depth button is made invisible for the project.
 func _on_iterative_depth_check_button_toggled(toggled_on: bool) -> void:
 	GameData.ITERATIVE_DEPTH = toggled_on
 
