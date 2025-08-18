@@ -11,10 +11,10 @@ config_version=5
 [application]
 
 config/name="LinukBoard2d"
+config/tags=PackedStringArray("gdextension", "memo")
 run/main_scene="res://scenes/menu.tscn"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 config/icon="res://assets/icon.svg"
-config/tags=PackedStringArray("gdextension", "memo")
 
 [autoload]
 
