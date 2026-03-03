@@ -1,4 +1,4 @@
-Modified Linuk Game - Minimax AI with Alpha-Beta Pruning
+# Modified Linuk Game - Minimax AI with Alpha-Beta Pruning
 
 A 8×8 board game implemented in the Godot Game Engine, featuring an AI opponent powered by the Minimax algorithm with optional Alpha-Beta Pruning.
 
