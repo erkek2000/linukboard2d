@@ -150,6 +150,34 @@ scripts/game_data.gd    Shared configuration
 project.godot           Godot project configuration
 ```
 
+## C++ migration and performance
+
+A native GDExtension version of the Minimax search is available on the
+[`cpp-migration` branch](https://github.com/erkek2000/linukboard2d/tree/cpp-migration).
+That branch retains the GDScript implementation for comparison and adds a menu
+option for switching between GDScript and C++.
+
+The following depth-3 timings were observed for the same search workload:
+
+| Implementation | Search time | Relative speed |
+| --- | ---: | ---: |
+| GDScript | 246.482 seconds | 1× |
+| C++ GDExtension | 0.291 seconds | approximately 847× faster |
+
+Both implementations reported the same 3,211,392 counted search states:
+
+```text
+depth 0: 3,198,811
+depth 1:    12,480
+depth 2:       100
+depth 3:         1
+```
+
+For this run, the C++ migration reduced search time by approximately **99.882%**
+and saved **246.191 seconds** on a single AI decision. These figures represent
+one observed debug run; absolute timings vary with hardware, compiler settings,
+board position, pruning configuration, and search depth.
+
 ## Academic context
 
 This software was produced as part of the bachelor's thesis of Mehmet Özer
