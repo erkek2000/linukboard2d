@@ -3,6 +3,7 @@ extends Node
 
 @export var MINIMAX_DEPTH: int = 3
 @export var PRUNING: bool = false
+@export var USE_CPP_MINIMAX: bool = false
 @export var CENTER_POS: bool = false
 @export var DEBUG: bool = false
 # Pseudo iterative depth button is made invisible for the project.

@@ -25,8 +25,9 @@ var New_Button_Signal: bool = false
 var Board_Maker : Node
 
 # Native GDExtension search engine. A single call crosses the script/native
-# boundary; all recursive work stays in C++.
-var Minimax_Engine = MinimaxEngine.new()
+# boundary when the extension is available. Dynamic lookup lets the GDScript
+# implementation run even when the native library has not been built.
+var Minimax_Engine: Object = null
 
 var Late_Game : bool = false
 var Turn_Number: int = 1
@@ -77,6 +78,10 @@ class MinimaxResult:
 # Default func called when node enters the scene. (on load)
 func _ready() -> void:
 	#test_place_blocks_loop()
+	if ClassDB.class_exists("MinimaxEngine"):
+		Minimax_Engine = ClassDB.instantiate("MinimaxEngine")
+	elif GameData.USE_CPP_MINIMAX:
+		push_warning("C++ minimax was selected, but MinimaxEngine is not loaded. Falling back to GDScript.")
 	
 	# Wait until buttons are ready. LOADING TIME
 	await get_tree().create_timer(0.1).timeout
@@ -615,6 +620,49 @@ func iterative_depth():
 	
 
 
+func run_selected_minimax() -> Dictionary:
+	if GameData.USE_CPP_MINIMAX and Minimax_Engine != null:
+		var native_result: Dictionary = Minimax_Engine.call(
+			"search",
+			Board,
+			AI_Pos,
+			Player_Pos,
+			GameData.MINIMAX_DEPTH,
+			GameData.PRUNING
+		)
+		if native_result.get("ok", false):
+			var native_calls: Array = native_result["calls"]
+			for depth in range(native_calls.size()):
+				Minimax_Called["depth" + str(depth)] = native_calls[depth]
+			native_result["implementation"] = "C++"
+			return native_result
+		push_warning(
+			"Native minimax failed: " +
+			str(native_result.get("error", "unknown error")) +
+			" Falling back to GDScript."
+		)
+	elif GameData.USE_CPP_MINIMAX:
+		push_warning("MinimaxEngine is unavailable. Falling back to GDScript.")
+
+	var script_result: MinimaxResult = minimax(
+		Board,
+		AI_Pos,
+		Player_Pos,
+		GameData.MINIMAX_DEPTH,
+		-9223372036854775800,
+		9223372036854775800,
+		true
+	)
+	return {
+		"ok": true,
+		"eval": script_result.eval,
+		"move": script_result.move,
+		"block1": script_result.block1,
+		"block2": script_result.block2,
+		"implementation": "GDScript"
+	}
+
+
 func ai_play():
 	# Pseudo iterative depth button is made invisible for the project.
 	# Changes minimax depth based on board state and turn number
@@ -629,21 +677,8 @@ func ai_play():
 	timer.start()
 
 	# Get best move using minimax
-	var result: Dictionary = Minimax_Engine.search(
-		Board,
-		AI_Pos,
-		Player_Pos,
-		GameData.MINIMAX_DEPTH,
-		GameData.PRUNING
-	)
-	if not result.get("ok", false):
-		push_error("Native minimax failed: " + str(result.get("error", "unknown error")))
-		timer.stop()
-		timer.queue_free()
-		return
-	var native_calls: Array = result["calls"]
-	for depth in range(native_calls.size()):
-		Minimax_Called["depth" + str(depth)] = native_calls[depth]
+	var result: Dictionary = run_selected_minimax()
+	print("Minimax implementation is ", result["implementation"])
 	print("Minimax Called is ",Minimax_Called)
 	print("Pruning Called is ",Pruning_Called)
 	Minimax_Called["depth0"] = 0
@@ -784,6 +819,7 @@ func _change_to_menu_scene():
 	# Set global variables to default
 	GameData.MINIMAX_DEPTH = 3
 	GameData.PRUNING = false
+	GameData.USE_CPP_MINIMAX = false
 	GameData.CENTER_POS = false
 	GameData.DEBUG = false
 	GameData.ITERATIVE_DEPTH = false
