@@ -24,6 +24,10 @@ var New_Button_Signal: bool = false
 # BoardMaker Node - for accessing buttons
 var Board_Maker : Node
 
+# Native GDExtension search engine. A single call crosses the script/native
+# boundary; all recursive work stays in C++.
+var Minimax_Engine = MinimaxEngine.new()
+
 var Late_Game : bool = false
 var Turn_Number: int = 1
 
@@ -625,8 +629,21 @@ func ai_play():
 	timer.start()
 
 	# Get best move using minimax
-	var result : MinimaxResult = MinimaxResult.new()
-	result = minimax(Board, AI_Pos, Player_Pos, GameData.MINIMAX_DEPTH, -9223372036854775800, 9223372036854775800, true)
+	var result: Dictionary = Minimax_Engine.search(
+		Board,
+		AI_Pos,
+		Player_Pos,
+		GameData.MINIMAX_DEPTH,
+		GameData.PRUNING
+	)
+	if not result.get("ok", false):
+		push_error("Native minimax failed: " + str(result.get("error", "unknown error")))
+		timer.stop()
+		timer.queue_free()
+		return
+	var native_calls: Array = result["calls"]
+	for depth in range(native_calls.size()):
+		Minimax_Called["depth" + str(depth)] = native_calls[depth]
 	print("Minimax Called is ",Minimax_Called)
 	print("Pruning Called is ",Pruning_Called)
 	Minimax_Called["depth0"] = 0
@@ -656,9 +673,9 @@ func ai_play():
 	#print(moves_array_test)
 	#moves_array_test.clear()
 	
-	var best_move = result.move
-	var best_block1 = result.block1
-	var best_block2 = result.block2
+	var best_move: Vector2i = result["move"]
+	var best_block1: Vector2i = result["block1"]
+	var best_block2: Vector2i = result["block2"]
 	
 	# Convert positions to strings for node lookup
 	var ai_pos_string = vector2i_to_string(AI_Pos)

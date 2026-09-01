@@ -8,17 +8,22 @@
 
 config_version=5
 
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
+
 [application]
 
 config/name="LinukBoard2d"
 config/tags=PackedStringArray("gdextension", "memo")
 run/main_scene="res://scenes/menu.tscn"
-config/features=PackedStringArray("4.4", "GL Compatibility")
+config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://assets/icon.svg"
 
 [autoload]
 
 GameData="*res://scripts/game_data.gd"
+_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 
 [debug]
 
@@ -28,6 +33,10 @@ settings/profiler/max_functions=65535
 
 window/size/viewport_width=430
 window/size/viewport_height=510
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg")
 
 [network]
 
